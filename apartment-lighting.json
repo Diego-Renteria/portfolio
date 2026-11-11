@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "floors": [
+    {
+      "key": {
+        "color": "#ffac50",
+        "brightness": 1
+      },
+      "accent": {
+        "color": "#ff6625",
+        "brightness": 1
+      },
+      "strip": {
+        "color": "#d87825",
+        "brightness": 1
+      }
+    },
+    {
+      "key": {
+        "color": "#c052ff",
+        "brightness": 1
+      },
+      "accent": {
+        "color": "#ff791b",
+        "brightness": 1
+      },
+      "strip": {
+        "color": "#db4aaf",
+        "brightness": 1
+      }
+    },
+    {
+      "key": {
+        "color": "#ffc878",
+        "brightness": 1
+      },
+      "accent": {
+        "color": "#ff9240",
+        "brightness": 1
+      },
+      "strip": {
+        "color": "#e7a34b",
+        "brightness": 1
+      }
+    },
+    {
+      "key": {
+        "color": "#397dff",
+        "brightness": 1
+      },
+      "accent": {
+        "color": "#24becd",
+        "brightness": 1
+      },
+      "strip": {
+        "color": "#456fe3",
+        "brightness": 1
+      }
+    },
+    {
+      "key": {
+        "color": "#9cbf76",
+        "brightness": 1
+      },
+      "accent": {
+        "color": "#e2a153",
+        "brightness": 1
+      },
+      "strip": {
+        "color": "#769b68",
+        "brightness": 1
+      }
+    },
+    {
+      "key": {
+        "color": "#8854ed",
+        "brightness": 1
+      },
+      "accent": {
+        "color": "#e4498e",
+        "brightness": 1
+      },
+      "strip": {
+        "color": "#7841b9",
+        "brightness": 1
+      }
+    }
+  ]
+}

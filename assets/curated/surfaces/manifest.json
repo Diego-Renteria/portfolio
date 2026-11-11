@@ -1,0 +1,38 @@
+{
+  "brown_mud_leaves_01": {
+    "source": "https://polyhaven.com/a/brown_mud_leaves_01",
+    "license": "CC0-1.0",
+    "maps": {
+      "diff": "brown_mud_leaves_01_diff.webp",
+      "normal": "brown_mud_leaves_01_normal.webp",
+      "rough": "brown_mud_leaves_01_rough.webp"
+    }
+  },
+  "leaf_scattered_gravel": {
+    "source": "https://polyhaven.com/a/leaf_scattered_gravel",
+    "license": "CC0-1.0",
+    "maps": {
+      "diff": "leaf_scattered_gravel_diff.webp",
+      "normal": "leaf_scattered_gravel_normal.webp",
+      "rough": "leaf_scattered_gravel_rough.webp"
+    }
+  },
+  "rock_01": {
+    "source": "https://polyhaven.com/a/rock_01",
+    "license": "CC0-1.0",
+    "maps": {
+      "diff": "rock_01_diff.webp",
+      "normal": "rock_01_normal.webp",
+      "rough": "rock_01_rough.webp"
+    }
+  },
+  "asphalt_track": {
+    "source": "https://polyhaven.com/a/asphalt_track",
+    "license": "CC0-1.0",
+    "maps": {
+      "diff": "asphalt_track_diff.webp",
+      "normal": "asphalt_track_normal.webp",
+      "rough": "asphalt_track_rough.webp"
+    }
+  }
+}

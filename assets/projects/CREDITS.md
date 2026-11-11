@@ -1,0 +1,1 @@
+Project photographs, CAD renders, schematics, and sketches extracted from Diego Renteria - Mechanical Engineering Portfolio (1).pdf, supplied by Diego Renteria on November 8, 2026. Images retain their original contents and are converted to WebP for web delivery. The downloadable PDF is the unmodified supplied document.

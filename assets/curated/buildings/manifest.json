@@ -1,0 +1,56 @@
+{
+  "assets": [
+    {
+      "id": "glass-office-tower",
+      "title": "Twenty-storey glass office tower",
+      "license": "CC0-1.0",
+      "source": "https://www.innerscene.com/tools/library/3d-parts/twenty-storey-glass-office-tower-0f2e9425",
+      "download": "https://www.innerscene.com/api/library/twenty-storey-glass-office-tower-0f2e9425/download",
+      "sourceSha256": "ff93ba9099db6c15db8d3484be7ed7ca87cd26234ad05e1ae9b9ac4e01c0e849",
+      "file": "glass-office-tower.glb.gz",
+      "triangles": 86792,
+      "primitives": 11,
+      "bytes": 831535,
+      "decodedBytes": 4597576,
+      "bounds": {
+        "min": [
+          -16.094600677490234,
+          0.0,
+          -13.868000030517578
+        ],
+        "max": [
+          16.094600677490234,
+          72.79499816894531,
+          13.868000030517578
+        ]
+      },
+      "front": "+Z"
+    },
+    {
+      "id": "mixed-use-high-rise",
+      "title": "Mixed-use high-rise",
+      "license": "CC0-1.0",
+      "source": "https://www.innerscene.com/tools/library/3d-parts/mixed-use-high-rise-27a41221",
+      "download": "https://www.innerscene.com/api/library/mixed-use-high-rise-27a41221/download",
+      "sourceSha256": "d7111419146ce258b33daf1eaabd3342b76df4db99740e1a6c099da9dde0af82",
+      "file": "mixed-use-high-rise.glb.gz",
+      "triangles": 85004,
+      "primitives": 24,
+      "bytes": 1353878,
+      "decodedBytes": 6826840,
+      "bounds": {
+        "min": [
+          -28.1200008392334,
+          0.0,
+          -20.1200008392334
+        ],
+        "max": [
+          28.1200008392334,
+          134.60400390625,
+          22.200000762939453
+        ]
+      },
+      "front": "+Z"
+    }
+  ]
+}
