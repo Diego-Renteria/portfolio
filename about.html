@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <script>const roomQuery=new URLSearchParams(location.search);if(!['pass','room','glass'].some(key=>roomQuery.has(key))){roomQuery.set('inside','about');location.replace('index.html?'+roomQuery);}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="About me in Diego Renteria’s interactive portfolio city.">
   <title>About me — Diego Renteria</title>

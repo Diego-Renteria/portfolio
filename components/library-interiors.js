@@ -182,6 +182,16 @@ export function buildLibraryInteriors(ctx,parent){
     cyl(.015,1.02,brass,cx,6.88,z);round(.31,.31,.31,glow,cx,6.22,z);cyl(.09,.055,brass,cx,6.4,z);
   }
   for(let z=7.2;z<12.2;z+=.85)box(4.25,.11,.095,wood,x,7.75,z);
+  const shelfLight=k.mat('#fbd2a1').clone();
+  shelfLight.emissive=new T.Color('#ffd09c');shelfLight.emissiveIntensity=.75;
+  for(const sx of [4.95,6.1,7.25])for(const y of [1.02,1.52,2.01,2.50]){
+    box(.92,.017,.025,shelfLight,sx,y,7.247);
+  }
+  for(const [sx,sz] of [[5.24,9.52],[6.65,10.32]]){
+    const light=new T.PointLight('#ffc888',6,4,2);
+    light.position.set(...k.project(sx,3.12,sz));k.group.add(light);
+    cyl(.011,2.9,brass,sx,4.93,sz);round(.51,.44,.51,shelfLight,sx,3.33,sz);
+  }
   k.finish();
   // Atlas-backed title spines share one material and eight instanced geometries.
   const dummy=new T.Object3D();

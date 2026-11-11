@@ -1,0 +1,23 @@
+.inside-block{position:fixed;inset:0;z-index:30;pointer-events:none;color:#fff;font:500 14px/1.4 'Space Grotesk',system-ui}
+.inside-block[hidden],.inside-block [hidden]{display:none!important}
+body[data-view="inside"] :is(header,.intro,.bottom,.scene-caption,#place-labels,#block-label,footer){visibility:hidden}
+body[data-view="inside"] main,body[data-view="inside"] #scene{position:fixed;inset:0;width:100%;height:100%;margin:0}
+.inside-top{position:absolute;inset:16px 18px auto;display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap}
+.inside-top [data-shots]{display:flex;gap:6px}
+.inside-top strong,.inside-block button,.inside-reader{pointer-events:auto;color:#fff;background:linear-gradient(145deg,#dce5fd44,#afbdd51a 45%,#0b1227a8),#151d2c70;border:1px solid #e7efff5c;box-shadow:inset 0 1px 1px #fff6,0 9px 30px #0005;backdrop-filter:blur(22px) saturate(150%);border-radius:22px}
+.inside-top strong,.inside-block button{min-height:42px;padding:10px 14px}
+.inside-block button:hover,.inside-block button[aria-pressed=true]{background:#d8e9ff45}
+.inside-browse{position:absolute;bottom:20px;right:18px}
+.inside-reader{position:absolute;bottom:72px;right:18px;width:min(430px,calc(100% - 36px));max-height:min(59vh,560px);overflow:auto;padding:16px}
+.inside-list{display:flex;flex-wrap:wrap;gap:6px;max-height:155px;overflow:auto}
+.inside-list input{width:100%;padding:9px;border-radius:9px;color:#fff;background:#1a2138;border:1px solid #bdcce68c}
+.inside-reader article{margin-top:12px;padding:14px;background:#15203591;border-radius:15px}
+.inside-reader h2{font-size:22px;margin:0 0 8px}
+.inside-reader details{margin:8px 0}
+.inside-reader summary{cursor:pointer;font-weight:700}
+.inside-reader a{color:#fff}
+.inside-enter{display:block;width:100%;margin:0 0 14px;padding:11px 15px;border:1px solid #e5f0ff8c;border-radius:25px;background:linear-gradient(145deg,#b5c6eb54,#36507775);color:white;font:inherit;cursor:pointer}
+.inside-reader p{color:#ebf3ff;line-height:1.55}body[data-view="inside"] main{min-height:0;transition:none}body[data-view="inside"] #block-leader{display:none}
+.city-sky-picker{color:#fff;display:flex;align-items:center;gap:7px;font-size:11px}.city-sky-picker select{color:#fff;border:1px solid #dae7ff54;background:#101b30;border-radius:18px;padding:8px 11px;font:inherit}
+.city-chase{color:#fff;border:1px solid #dae7ff54;background:#101b30;border-radius:18px;padding:8px 11px;font-size:11px}
+body[data-view="overview"]:not([data-world="original"]) #scene canvas{touch-action:pan-y}

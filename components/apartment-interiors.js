@@ -217,8 +217,10 @@ export function buildApartmentInteriors(ctx,parent){
   }
   // Acoustic cinema: large luminous screen, speakers and two tiers of recliners.
   {
-    const y=styles[3].base;room(y,'#4c4a46','#293c48','fabric');
-    for(let i=0;i<10;i++)box(.12,1.75,.1,'#53636a',X-2.4+i*.46,y+1.2,3.49);
+    const y=styles[3].base;room(y,'#79513f','#ad8765','wood');
+    const masonry=k.mat('#996552','brick'),opal=k.mat('#ffdc9c').clone();
+    opal.emissive=new T.Color('#ffb45d');opal.emissiveIntensity=.6;
+    box(4.35,2.22,.10,masonry,X,y+1.27,6.71);
     box(2.72,1.62,.1,C.dark,X-.15,y+1.26,6.8);
     cinemaScreen=new T.Mesh(new T.PlaneGeometry(2.52,1.4175),new T.MeshBasicMaterial({color:'#14202b',toneMapped:false}));
     cinemaScreen.name='Apartment cinema live television screen';cinemaScreen.position.set(...k.project(X-.15,y+1.26,6.865));cinemaScreen.userData.mediaSurface=true;k.group.add(cinemaScreen);
@@ -228,8 +230,24 @@ export function buildApartmentInteriors(ctx,parent){
     cyl(.065,.025,C.dark,X+.12,y+1.95,10.59,[Math.PI/2,0,0]);cyl(.044,.028,screen,X+.12,y+1.95,10.575,[Math.PI/2,0,0]);
     box(4.25,.19,.53,walnut,X-.15,y+.36,6.65);
     for(const side of[-1,1]){box(.36,1.15,.38,C.dark,X+side*2.36,y+.75,6.8);for(const yy of[.45,.8,1.08])cyl(.115,.035,'#68747a',X+side*2.36,y+yy,7.01,[Math.PI/2,0,0]);}
-    rug(X,y,10.4,4.9,3.8,'#555f63');box(4.9,.14,1.65,C.dark,X,y+.22,11.18);
-    for(const[row,z]of[[0,9.2],[1,11.2]])for(const dx of[-1.55,0,1.55]){
+    rug(X,y,10.5,4.65,3.1,'#835441');
+    const upholstery=fabric('#a79e8c');
+    soft(3.35,.33,.96,upholstery,X,y+.34,11.08);
+    for(const dx of [-1.08,0,1.08]){
+      soft(1.03,.21,.78,upholstery,X+dx,y+.57,10.99);
+      soft(1.02,.59,.20,upholstery,X+dx,y+.89,11.45,[.10,0,0]);
+    }
+    for(const side of [-1,1]){
+      soft(.23,.31,.95,upholstery,X+side*1.57,y+.68,11.08);
+      soft(.42,.43,.15,fabric(side<0?'#9d674e':'#565d4c'),X+side*1.01,y+.89,11.23,[.14,0,side*.22]);
+      plant(X+side*2.13,y+.22,8.88,.68);
+      rod([X+side*1.85,y+2.36,9.05],[X+side*1.85,y+1.88,9.05],.016,metal(C.dark));
+      round(.32,.30,.32,opal,X+side*1.85,y+1.79,9.05);
+    }
+    cyl(.43,.065,walnut,X+.28,y+.53,9.72);
+    cyl(.09,.32,metal(C.dark),X+.28,y+.34,9.72);
+    soft(.27,.035,.19,C.paper,X+.31,y+.58,9.67,[0,.16,0]);
+    for(const[row,z]of[[0,9.2]])for(const dx of[-1.55]){
       const by=y+.14+row*.14;soft(.91,.26,.89,fabric('#496078'),X+dx,by+.36,z);soft(.92,.78,.23,fabric('#496078'),X+dx,by+.74,z+.35,[.13,0,0]);soft(.82,.15,.56,fabric('#496078'),X+dx,by+.25,z-.58,[-.22,0,0]);
       seam(X+dx,by+.53,z-.38,.75,C.blue);seam(X+dx,by+1.08,z+.24,.75,C.blue);
       for(const side of[-1,1]){soft(.18,.4,.9,fabric('#384e63'),X+dx+side*.49,by+.5,z);cyl(.065,.018,metal(C.dark),X+dx+side*.49,by+.71,z-.17);}

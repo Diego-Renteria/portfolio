@@ -243,7 +243,10 @@ export function mountCitySky(id,host,renderer,scene){
   sky.select(id);ships.select(id);
   function resize(width,height){sky.resize(Math.max(1,width),Math.max(1,height));}
   resize(host.clientWidth,host.clientHeight);
-  return {resize,render(time,aspect,reduced){
+  return {resize,select(next){
+    if(!names.has(next))return false;
+    sky.select(next);ships.select(next);return true;
+  },render(time,aspect,reduced){
     scene.background=null;
     renderer.clear();
     sky.render(time,reduced);

@@ -2,7 +2,7 @@ import * as T from './three.module.js?v=b477ce33502c';
 import {applyPageAtmosphere} from './components/page-atmosphere.js?v=b477ce33502c';
 import {mountApartmentTV} from './components/apartment-tv.js?v=b477ce33502c';
 import {ROOMS,UI_STYLES,TRACK_ID,entriesFor,turntableEntry} from './components/room-catalog.js?v=rooms-1';
-import {buildRoom,disposeRoom,createTVScreen} from './components/room-scene.js?v=rooms-1';
+import {buildRoom,disposeRoom,createTVScreen} from './components/room-scene.js?v=inside-1';
 
 const kind=document.body.dataset.room,info=ROOMS[kind],entries=entriesFor(kind);
 const root=document.querySelector('#room-content'),$=id=>document.getElementById(id);
@@ -12,6 +12,7 @@ const arrow='<span aria-hidden="true">↗</span>';
 const query=new URLSearchParams(location.search),requested=Number(query.get('room'));
 let preset=Number.isInteger(requested)&&requested>=1&&requested<=10?requested-1:0;
 let style=UI_STYLES.some(([id])=>id===query.get('glass'))?query.get('glass'):'pearl';
+let edition=kind==='about'?0:Number(query.get('pass'))||0;
 let shelf=0,active=null,room,renderer,screen,player,tv,returnFocus;
 let stageVisible=true;
 let catalog=new Map(),collectionOffset=0,roomMotion=!reduced,width=1,height=1;
@@ -31,6 +32,7 @@ root.innerHTML=`
     <div class="room-intro">
       <div><p class="room-eyebrow">${info.name}</p><h1>${info.heading}</h1><p class="room-lead">${info.intro}</p></div>
       <div class="room-options">
+        ${kind!=='about'?'<label>Review pass <select id="room-pass"><option value="0">Original</option><option value="1">First pass</option><option value="2">Refined</option></select></label>':''}
         <label>Room design <select id="room-design">${info.presets.map((name,i)=>`<option value="${i}">${String(i+1).padStart(2,'0')} · ${name}</option>`).join('')}</select></label>
         <label>Glass style <select id="glass-style">${UI_STYLES.map(([id,name],i)=>`<option value="${id}">${String(i+1).padStart(2,'0')} · ${name}</option>`).join('')}</select></label>
       </div>
@@ -137,13 +139,13 @@ function setStyle(value,preview=false){
 function layoutRoom(){
   const previous=room;
   if(previous){if(screen)screen.removeFromParent();scene.remove(previous.world);disposeRoom(previous,screen);}
-  room=buildRoom(kind,preset,{screen,musicPage:shelf});
+  room=buildRoom(kind,preset,{screen,musicPage:shelf,edition});
   scene.add(room.world);
   pins.replaceChildren();pinRecords.length=0;
   for(const target of room.targets.values()){
     if(!target.label&&!target.screen)continue;
     const button=document.createElement('button');button.className='room-pin';button.type='button';
-    button.textContent=target.screen?'TV':target.entry.kind==='deck'?'Turntable':target.entry.title;
+    button.textContent=target.screen?'TV':target.entry.kind==='deck'?'Turntable':target.labelText||target.entry.title;
     button.setAttribute('aria-label',target.screen?'Focus on the TV':target.entry.title);
     button.addEventListener('click',()=>show(target.entry,true,button));
     pins.append(button);pinRecords.push({button,target});
@@ -239,6 +241,10 @@ function switchCrate(step){
 $('shelf-back')?.addEventListener('click',()=>switchCrate(-1));
 $('shelf-next')?.addEventListener('click',()=>switchCrate(1));
 $('open-deck')?.addEventListener('click',event=>show(turntableEntry(),true,event.currentTarget));
+if($('room-pass')){
+  $('room-pass').value=String(edition);
+  $('room-pass').onchange=()=>{edition=Number($('room-pass').value);if(renderer)layoutRoom();const url=new URL(location.href);url.searchParams.set('pass',edition);history.replaceState(null,'',url);};
+}
 setStyle(style);buildCollection();
 
 function playMusic(){
@@ -277,8 +283,8 @@ function sizeScene(){
   width=Math.max(1,stage.clientWidth);height=Math.max(1,stage.clientHeight);
   renderer.setSize(width,height,false);camera.aspect=width/height;updateShot();
 }
-function pixelFor(target){
-  projected.copy(target.anchor);target.object.localToWorld(projected);projected.project(camera);
+function pixelFor(target,anchor=target.anchor){
+  projected.copy(anchor);target.object.localToWorld(projected);projected.project(camera);
   return {x:(projected.x*.5+.5)*width,y:(.5-projected.y*.5)*height,visible:projected.z>-1&&projected.z<1};
 }
 function positionGlass(){
@@ -309,7 +315,7 @@ function positionGlass(){
 function markPins(){
   const claimed=[];
   for(const {button,target} of pinRecords){
-    const p=pixelFor(target);
+    const p=pixelFor(target,target.labelAnchor??target.anchor);
     const labelMargin=Math.min(68,width*.135);
     button.hidden=!!active||!p.visible||p.x<labelMargin||p.x>width-labelMargin||p.y<37||p.y>height-7||
       claimed.some(q=>Math.abs(p.x-q.x)<92&&Math.abs(p.y-q.y)<29);

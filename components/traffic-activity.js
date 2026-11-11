@@ -32,7 +32,7 @@ export function samplePassingPose(pose,distance,pass,routeLength){
 }
 
 export function createTrafficActivity({cars,routes,random,sampleBase,hasRoom,isVisible=()=>true,quickStart=false}){
-  let chase=null,nextChase=quickStart?3:13+random()*14,nextDecision=.55,nextPass=6;
+  let chase=null,nextChase=quickStart?1.5:8+random()*8,nextDecision=.55,nextPass=5;
   const stats={chases:0,finished:0,passes:0,wrongWayRuns:0,reroutes:0};
   let cursor=0;
   const nextStop=(car,s=car.s,route=car.route)=>
@@ -173,13 +173,13 @@ export function createTrafficActivity({cars,routes,random,sampleBase,hasRoom,isV
   }
 
   function pace(car){
-    if(car.pursuitRole==='suspect')return car.pass?.leader?1.50:1.32;
+    if(car.pursuitRole==='suspect')return car.pass?.leader?1.67:1.48;
     if(car.pursuitRole==='police'){
       const gap=loopDistance(car.s,chase.suspect.s,car.route.length);
-      return clamp(.94+(gap-5)*.036,.94,1.40);
+      return clamp(1.03+(gap-5)*.040,1.03,1.57);
     }
     return car.pass?.leader?1.44:car.pass?1.12:1;
   }
 
-  return {update,pace,stats,get chase(){return chase;}};
+  return {update,pace,stats,requestPursuit(){nextChase=0;},get chase(){return chase;}};
 }

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <script>const roomQuery=new URLSearchParams(location.search);if(!['pass','room','glass'].some(key=>roomQuery.has(key))){roomQuery.set('inside','music');location.replace('index.html?'+roomQuery);}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Record Store in Diego Renteria’s interactive portfolio city.">
   <title>Record Store — Diego Renteria</title>
@@ -23,6 +24,6 @@
   </header>
   <main id="room-content" class="room-page"></main>
   <footer><span>Built around curiosity.</span><span>AUTUMN, ALWAYS.</span></footer>
-  <script type="module" src="room-experience.js?v=rooms-1"></script>
+  <script type="module" src="room-experience.js?v=inside-1"></script>
 </body>
 </html>

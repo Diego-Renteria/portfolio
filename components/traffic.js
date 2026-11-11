@@ -5,7 +5,7 @@ import {insideLand,flatRoadXs,flatRoadZs,inStadiumReserve} from './geography.js?
 import {buildIntersectionSignals,MAIN_INTERSECTION} from './intersection-signals.js?v=b477ce33502c';
 import {createActuatedController} from './traffic-controller.js?v=b477ce33502c';
 import {driverProfile,freeRoadSpeed} from './driving-profile.js?v=city-traffic-1';
-import {createTrafficActivity,heavyModel,patrolFlash,personalityFor,samplePassingPose} from './traffic-activity.js?v=city-traffic-1';
+import {createTrafficActivity,heavyModel,patrolFlash,personalityFor,samplePassingPose} from './traffic-activity.js?v=inside-1';
 const mod=(v,n)=>((v%n)+n)%n;
 // Shared compatible movements form platoons; crossing paths yield before the stop bar.
 export function buildTraffic({THREE:T,world,random=Math.random},network=null){

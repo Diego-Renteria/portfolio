@@ -141,10 +141,17 @@ export function buildRecordInteriors(ctx,parent){
     cyl(.012,1.35,black,cx,3.9,10.1);k.put('cone',.23,.23,.23,'#826d50',cx,3.18,10.1);cyl(.185,.018,glow,cx,3.07,10.1);
   }
   for(const z of [7.8,9.5,11.3])box(4.35,.12,.12,darkwood,x,4.55,z);
-  k.finish();
   // Merged sleeve faces preserve all 113 identities with one material/draw call.
   k.group.add(albumSleeves(T,sleeveFaces,'71 face-out albums from Diego’s collection'));
   // Rear storage has legible spine typography when viewed close up.
+  k.clearZone();
+  const aisleGlow=k.mat('#f4cb97').clone();aisleGlow.emissive=new T.Color('#ffd3a0');aisleGlow.emissiveIntensity=.9;
+  for(const [sx,sz] of [[11.1,8.0],[12.5,9.65],[11.1,11.38]]){
+    cyl(.017,.75,black,sx,3.09,sz);
+    cyl(.26,.18,black,sx,2.73,sz);cyl(.225,.018,aisleGlow,sx,2.63,sz);
+    const light=new T.PointLight('#ffd1a3',5,4.8,2);light.position.set(...k.project(sx,2.56,sz));k.group.add(light);
+  }
+  k.finish();
   const spineCanvas=document.createElement('canvas');spineCanvas.width=1024;spineCanvas.height=512;
   const sc=spineCanvas.getContext('2d');sc.fillStyle='#c9bda6';sc.fillRect(0,0,1024,512);
   const sp=[],sn=[],su=[],si=[];

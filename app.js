@@ -1,14 +1,16 @@
+import {WORLDS,createMiniWorlds} from './components/mini-worlds.js?v=inside-1';
+import {mountInsideBlock} from './components/inside-block.js?v=inside-1';
 import {renderMakerCard} from './components/engineering-work.js?v=rooms-1';
 import {createFrameResize,cameraRainDensity} from './components/frame-resize.js?v=b477ce33502c';
 import { THREE as T, createContext } from './components/context.js?v=b477ce33502c';
 import { buildTerrain } from './components/terrain.js?v=b477ce33502c';
 import { buildSkyline } from './components/skyline.js?v=b477ce33502c';
 import { buildStreets } from './components/streets.js?v=b477ce33502c';
-import { buildTraffic } from './components/traffic.js?v=city-traffic-1';
+import { buildTraffic } from './components/traffic.js?v=inside-1';
 import { buildGreenery } from './components/greenery.js?v=b477ce33502c';
 import { buildPark } from './components/park.js?v=b477ce33502c';
 import { createRenderBudget } from './components/render-budget.js?v=b477ce33502c';
-import { buildPortfolio } from './components/portfolio.js?v=b477ce33502c';
+import { buildPortfolio } from './components/portfolio.js?v=inside-1';
 import {buildUrbanDetails} from './components/urban-details.js?v=b477ce33502c';
 import {createBackdrops} from './components/scene-backdrops.js?v=b477ce33502c';
 import {buildRainAtmosphere} from './components/rain-atmosphere.js?v=b477ce33502c';
@@ -28,6 +30,20 @@ const content={music:{k:'04 / THE RECORD STORE',title:'On repeat.',body:''},proj
 const host=document.querySelector('#scene'),panel=document.querySelector('#panel');
 let currentView='overview',currentPlace=null,navigate=()=>{},setHovered=()=>{},recordCardCleanup=null;
 document.body.dataset.view=currentView;
+const insideBlock=mountInsideBlock({
+  enter(id){
+    recordCardCleanup?.();recordCardCleanup=null;panel.hidden=true;
+    currentPlace=id;currentView='inside';document.body.dataset.view='inside';
+    const url=new URL(location.href);url.searchParams.set('inside',id);history.replaceState(null,'',url);
+    syncHeader();setHovered(null);navigate('inside',id);
+  },
+  leave(){viewBlock();},
+});
+function closeInside(){
+  insideBlock.close();
+  const url=new URL(location.href);
+  if(url.searchParams.has('inside')){url.searchParams.delete('inside');history.replaceState(null,'',url);}
+}
 function syncHeader(){const header=document.querySelector('header'),hidden=currentView==='block';header.inert=hidden;header.setAttribute('aria-hidden',String(hidden));}
 function openPlace(id){
   recordCardCleanup?.();recordCardCleanup=null;
@@ -37,15 +53,21 @@ function openPlace(id){
   document.querySelector('#panel-body').innerHTML=c.body+'<a class="page-link" href="'+atmosphereHref(page,document.documentElement.dataset.atmosphere)+'">Go to the page <span>↗</span></a>';
   if(id==='music')recordCardCleanup=mountRecordCard(document.querySelector('#panel-body'));
   if(id==='projects')document.querySelector('#panel-body').innerHTML=renderMakerCard();
+  if(['projects','about','lately','music'].includes(id)){
+    const enter=document.createElement('button');enter.type='button';enter.className='inside-enter';
+    enter.textContent='Step inside ↗';enter.onclick=()=>insideBlock.open(id);
+    document.querySelector('#panel-body').prepend(enter);
+    if(id!=='projects'&&id!=='music')document.querySelector('#panel-body .page-link')?.remove();
+  }
   panel.hidden=false;currentView='place';document.body.dataset.view=currentView;document.querySelector('#reset').hidden=false;
   syncHeader();setHovered(null);navigate('place',id);document.querySelector('#close').focus({preventScroll:true});
 }
-function viewBlock(){recordCardCleanup?.();recordCardCleanup=null;panel.hidden=true;currentPlace=null;currentView='block';document.body.dataset.view=currentView;syncHeader();document.querySelector('#reset').hidden=false;document.querySelector('#view-caption').textContent='A LITTLE CORNER OF MY WORLD';document.querySelector('#view-hint').textContent='Choose a building to look inside.';setHovered(null);navigate('block');document.querySelector('#reset').focus({preventScroll:true});}
-function overview(){recordCardCleanup?.();recordCardCleanup=null;panel.hidden=true;currentPlace=null;currentView='overview';document.body.dataset.view=currentView;syncHeader();document.querySelector('#reset').hidden=true;document.querySelector('#view-caption').textContent='A CITY OF MY OWN';document.querySelector('#view-hint').textContent='Start downtown. Stay a while.';setHovered(null);navigate('overview');document.querySelector('#explore').focus({preventScroll:true});}
+function viewBlock(){closeInside();recordCardCleanup?.();recordCardCleanup=null;panel.hidden=true;currentPlace=null;currentView='block';document.body.dataset.view=currentView;syncHeader();document.querySelector('#reset').hidden=false;document.querySelector('#view-caption').textContent='A LITTLE CORNER OF MY WORLD';document.querySelector('#view-hint').textContent='Choose a building to look inside.';setHovered(null);navigate('block');document.querySelector('#reset').focus({preventScroll:true});}
+function overview(){closeInside();recordCardCleanup?.();recordCardCleanup=null;panel.hidden=true;currentPlace=null;currentView='overview';document.body.dataset.view=currentView;syncHeader();document.querySelector('#reset').hidden=true;document.querySelector('#view-caption').textContent='A CITY OF MY OWN';document.querySelector('#view-hint').textContent='Start downtown. Stay a while.';setHovered(null);navigate('overview');document.querySelector('#explore').focus({preventScroll:true});}
 document.querySelectorAll('[data-place]').forEach(b=>{b.onclick=()=>openPlace(b.dataset.place);for(const e of['pointerenter','focus'])b.addEventListener(e,()=>setHovered(b.dataset.place));for(const e of['pointerleave','blur'])b.addEventListener(e,()=>setHovered(null));});
 document.querySelector('#explore').onclick=viewBlock;document.querySelector('#reset').onclick=overview;document.querySelector('.brand').onclick=e=>{e.preventDefault();overview()};document.querySelector('#close').onclick=viewBlock;
 const blockLabel=document.querySelector('#block-label');blockLabel.onclick=viewBlock;for(const e of['pointerenter','focus'])blockLabel.addEventListener(e,()=>setHovered('block'));for(const e of['pointerleave','blur'])blockLabel.addEventListener(e,()=>setHovered(null));
-document.addEventListener('keydown',e=>{if(e.key==='Escape')currentView==='place'?viewBlock():overview()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')['place','inside'].includes(currentView)?viewBlock():overview()});
 try{
   const scene=new T.Scene(),world=new T.Group();scene.add(world);const ctx=createContext(world,await loadSurfaceMaps(T));
   let lightingPreview=false;
@@ -57,6 +79,16 @@ try{
   const sun=new T.DirectionalLight('#ffd7a6',3.5);sun.position.set(-175,225,200);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-190,right:190,top:170,bottom:-170,near:1,far:850});sun.shadow.bias=-.00012;sun.shadow.normalBias=.022;scene.add(sun);sun.target.position.set(0,0,11);scene.add(sun.target);
   const fill=new T.DirectionalLight('#bdd3e1',.22);fill.position.set(90,65,-70);scene.add(fill);
   const terrain=buildTerrain(ctx),skyline=buildSkyline(ctx),streets=buildStreets(ctx),park=buildPark(ctx),greenery=buildGreenery(ctx),systems=[terrain,skyline,streets,park,greenery];
+  const miniWorlds=createMiniWorlds(T,terrain,world);
+  const worldPicker=document.createElement('label');worldPicker.className='city-sky-picker';
+  const worldSelect=document.createElement('select');worldSelect.setAttribute('aria-label','Landscape');
+  for(const [id,label] of WORLDS)worldSelect.add(new Option(label,id));
+  const requestedWorld=new URLSearchParams(location.search).get('world');
+  worldSelect.value=WORLDS.some(([id])=>id===requestedWorld)?requestedWorld:'original';
+  worldPicker.append('World ',worldSelect);document.querySelector('.bottom').prepend(worldPicker);
+  function changeWorld(){miniWorlds.select(worldSelect.value);document.body.dataset.world=worldSelect.value;navigate(currentView,currentPlace);}
+  worldSelect.onchange=()=>{const url=new URL(location.href);url.searchParams.set('world',worldSelect.value);history.replaceState(null,'',url);changeWorld();};
+  changeWorld();
   const trafficPoint=new T.Vector3();
   const traffic=buildTraffic(ctx,{carCount:208,perimeterCars:48,activity:{
     random:Math.random,
@@ -69,6 +101,7 @@ try{
       return Math.abs(trafficPoint.x)<.94&&Math.abs(trafficPoint.y)<.94&&trafficPoint.z>-1&&trafficPoint.z<1;
     },
   }}),urban=buildUrbanDetails(ctx);systems.push(traffic,urban);const portfolio=buildPortfolio(ctx);systems.push(portfolio);
+  const chaseButton=document.createElement('button');chaseButton.type='button';chaseButton.className='city-chase';chaseButton.textContent='Trigger a pursuit';chaseButton.hidden=matchMedia('(prefers-reduced-motion: reduce)').matches;chaseButton.onclick=()=>traffic.activity.requestPursuit();document.querySelector('.bottom').prepend(chaseButton);
   renderer.domElement.dataset.vehicleModels=String(new Set(traffic.cars.map(car=>car.model)).size);
   const rainAtmosphere=buildRainAtmosphere(ctx);systems.push(rainAtmosphere);
   const lighting=buildCityLighting(ctx,streets.lampSites);systems.push(lighting);
@@ -97,27 +130,46 @@ try{
   chooseBackdrop('night');
   const requestedSky=new URLSearchParams(location.search).get('sky');
   let citySky=null;
-  if(requestedSky)void import('./components/atlas-sky.js?v=atlas-1').then(({mountCitySky})=>{
-    citySky=mountCitySky(requestedSky,host,renderer,scene);
-    if(citySky)renderer.domElement.dataset.sky=requestedSky;
+  void import('./components/atlas-sky.js?v=inside-1').then(({SKIES,mountCitySky})=>{
+    const control=document.createElement('label');control.className='city-sky-picker';
+    const select=document.createElement('select');select.setAttribute('aria-label','Sky backdrop');
+    for(const [id,label] of SKIES)select.add(new Option(label,id));
+    select.value=SKIES.some(([id])=>id===requestedSky)?requestedSky:SKIES[0][0];
+    citySky=mountCitySky(select.value,host,renderer,scene);
+    if(!citySky)return;
+    renderer.domElement.dataset.sky=select.value;
+    select.onchange=()=>{if(citySky.select(select.value)){const url=new URL(location.href);url.searchParams.set('sky',select.value);history.replaceState(null,'',url);renderer.domElement.dataset.sky=select.value;}};
+    control.append('Sky ',select);document.querySelector('.bottom').prepend(control);
   }).catch(error=>console.warn('Keeping the original city sky',error));
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,target=new T.Vector3(0,-2,11),wantedTarget=target.clone(),eye=new T.Vector3(285,205,355),wantedEye=eye.clone();let viewShift=.10,wantedShift=.10,viewLift=0,wantedLift=0,wantedFov=34,wantedNear=5;
   const apartmentTV=mountApartmentTV({THREE:T,host,renderer,screen:portfolio.interiors[0].cinemaScreen,reduced,highlight:portfolio.highlights.about.uniform});
   const anchors=portfolio.anchors;const anchor=id=>anchors[id==='experience'?'about':id];
-  navigate=(view,id)=>{const mobile=host.clientWidth<700;wantedFov=34;wantedNear=view==='overview'?(mobile?15:5):.5;camera.far=2000;wantedLift=mobile&&view==='place'?.19:0;if(view==='overview'){wantedTarget.set(0,-2,11);wantedEye.set(mobile?790:285,mobile?570:205,mobile?1000:355);wantedShift=mobile?0:.10;}else if(view==='block'){wantedTarget.set(0,10.4,12);wantedEye.set(1.5,14,49);wantedFov=T.MathUtils.radToDeg(2*Math.atan(31/(wantedEye.distanceTo(wantedTarget)*camera.aspect)));wantedShift=0;}else{const place=portfolio.viewTargets[id==='experience'?'about':id],center=place.center,nominalDistance=Math.max(21,place.height*1.9)*(mobile?1.6:1),distance=Math.min(27,nominalDistance);wantedFov=T.MathUtils.radToDeg(2*Math.atan(Math.tan(T.MathUtils.degToRad(17))*nominalDistance/distance));wantedTarget.copy(center);wantedTarget.z=16;wantedEye.set(center.x+distance*.10,center.y+distance*.10,17+distance);wantedShift=lightingPreview?0:mobile?0:-.15;}};
+  navigate=(view,id)=>{const mobile=host.clientWidth<700;wantedFov=34;wantedNear=view==='overview'?(mobile?15:5):.5;camera.far=2000;if(view==='inside'){const shot=insideBlock.shot(id);if(shot){wantedEye.fromArray(shot[1]);wantedTarget.fromArray(shot[2]);wantedNear=.06;wantedFov=mobile?70:58;wantedShift=0;wantedLift=0;return;}}wantedLift=mobile&&view==='place'?.19:0;if(view==='overview'){wantedTarget.set(0,worldSelect.value==='planet'?-27:worldSelect.value==='original'?-2:-15,11);wantedEye.set(mobile?790:285,mobile?570:205,mobile?1000:355);wantedShift=mobile?0:.10;}else if(view==='block'){wantedTarget.set(0,10.4,12);wantedEye.set(1.5,14,49);wantedFov=T.MathUtils.radToDeg(2*Math.atan(31/(wantedEye.distanceTo(wantedTarget)*camera.aspect)));wantedShift=0;}else{const place=portfolio.viewTargets[id==='experience'?'about':id],center=place.center,nominalDistance=Math.max(21,place.height*1.9)*(mobile?1.6:1),distance=Math.min(27,nominalDistance);wantedFov=T.MathUtils.radToDeg(2*Math.atan(Math.tan(T.MathUtils.degToRad(17))*nominalDistance/distance));wantedTarget.copy(center);wantedTarget.z=16;wantedEye.set(center.x+distance*.10,center.y+distance*.10,17+distance);wantedShift=lightingPreview?0:mobile?0:-.15;}};
   const hoverTarget=new T.Vector3(),hoverValue=new T.Vector3();
+  let orbit=0,drag=null,dragged=false;
+  renderer.domElement.addEventListener('pointerdown',event=>{
+    if(currentView!=='overview'||worldSelect.value==='original'||event.button!==0)return;
+    drag={x:event.clientX,angle:orbit};dragged=false;renderer.domElement.setPointerCapture(event.pointerId);
+  });
+  renderer.domElement.addEventListener('pointermove',event=>{
+    if(!drag)return;
+    const dx=event.clientX-drag.x;
+    if(Math.abs(dx)>4)dragged=true;
+    if(dragged)orbit=drag.angle+dx*.009;
+  });
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])renderer.domElement.addEventListener(type,()=>{drag=null;});
   const islandHover=new T.Mesh(new T.BoxGeometry(316,120,232),new T.MeshBasicMaterial());islandHover.position.set(0,24,11);islandHover.visible=false;world.add(islandHover);
   const blockProxy=new T.Mesh(new T.BoxGeometry(45,24,15),new T.MeshBasicMaterial());blockProxy.position.set(0,12,11);blockProxy.visible=false;world.add(blockProxy);
   const blockHalo=new T.Mesh(new T.PlaneGeometry(45,15),new T.MeshBasicMaterial({color:'#e9b76f',transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide}));blockHalo.rotation.x=-Math.PI/2;blockHalo.position.set(0,.24,11);world.add(blockHalo);
   let hovered=null;setHovered=id=>{hovered=id==='experience'?'about':id;renderer.domElement.dataset.highlight=hovered||'';document.querySelectorAll('[data-anchor]').forEach(b=>b.classList.toggle('is-hovered',b.dataset.anchor===hovered));blockLabel.classList.toggle('is-hovered',hovered==='block');};
   const ray=new T.Raycaster(),pointer=new T.Vector2(),clickables=portfolio.clickables;
-  function hit(e){const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera);if(currentView==='overview')return ray.intersectObject(blockProxy).length?'block':null;let obj=ray.intersectObjects(clickables,true)[0]?.object;while(obj&&!obj.userData.place)obj=obj.parent;return obj?.userData.place;}
+  function hit(e){if(currentView==='inside')return null;const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera);if(currentView==='overview')return ray.intersectObject(blockProxy).length?'block':null;let obj=ray.intersectObjects(clickables,true)[0]?.object;while(obj&&!obj.userData.place)obj=obj.parent;return obj?.userData.place;}
   renderer.domElement.addEventListener('pointermove',e=>{const id=hit(e);setHovered(id);if(!reduced&&currentView!=='place'){const over=currentView==='block'||ray.intersectObject(islandHover).length>0,close=currentView==='block';hoverTarget.set(over?pointer.y*(close?.004:.012):0,over?pointer.x*(close?.008:.025):0,over?(close?.003:.018):0);}renderer.domElement.style.cursor=id?'pointer':'default';});
-  renderer.domElement.addEventListener('pointerleave',()=>{setHovered(null);hoverTarget.set(0,0,0)});renderer.domElement.addEventListener('click',e=>{const id=hit(e);if(id)id==='block'?viewBlock():openPlace(id)});
+  renderer.domElement.addEventListener('pointerleave',()=>{setHovered(null);hoverTarget.set(0,0,0)});renderer.domElement.addEventListener('click',e=>{if(dragged){dragged=false;return;}const id=hit(e);if(id)id==='block'?viewBlock():openPlace(id)});
   const frameResize=createFrameResize({renderer,host,onResize(width,height){citySky?.resize(width,height);rainAtmosphere.setViewport(width,height);camera.aspect=width/height;navigate(currentView,currentPlace);}});
   window.addEventListener('resize',frameResize.invalidate);new ResizeObserver(frameResize.invalidate).observe(host);
-  if(new URLSearchParams(location.search).get('view')==='block')viewBlock();const requestedCard=new URLSearchParams(location.search).get('card');if(['music','projects'].includes(requestedCard))openPlace(requestedCard);frameResize.flush();eye.copy(wantedEye);target.copy(wantedTarget);camera.position.copy(eye);camera.lookAt(target);camera.near=wantedNear;camera.fov=wantedFov;camera.updateProjectionMatrix();
-  await nightEnvironmentReady;await renderer.compileAsync(scene,camera);document.querySelector('#loading').remove();const startedAt=performance.now();let last=startedAt,elapsed=0;const labelButtons=[...document.querySelectorAll('[data-anchor]')],projected=new T.Vector3();
+  if(new URLSearchParams(location.search).get('view')==='block')viewBlock();const requestedCard=new URLSearchParams(location.search).get('card');if(['music','projects'].includes(requestedCard))openPlace(requestedCard);const requestedRoom=new URLSearchParams(location.search).get('inside');if(['projects','about','lately','music'].includes(requestedRoom))insideBlock.open(requestedRoom);frameResize.flush();eye.copy(wantedEye);target.copy(wantedTarget);camera.position.copy(eye);camera.lookAt(target);camera.near=wantedNear;camera.fov=wantedFov;camera.updateProjectionMatrix();
+  await nightEnvironmentReady;await renderer.compileAsync(scene,camera);document.querySelector('#loading').remove();const startedAt=performance.now();let last=startedAt,elapsed=0,orbitAngle=0;const labelButtons=[...document.querySelectorAll('[data-anchor]')],projected=new T.Vector3();
   // Prepare the furnished façades progressively after the first city frame.
   void prepareCityInteriors();
   // Imports enhance an already visible city; a failed asset keeps its fallback.
@@ -135,13 +187,13 @@ try{
     lightingPreview=true;chooseBackdrop(atmosphere);currentPlace='about';currentView='place';document.body.dataset.view=currentView;panel.hidden=true;syncHeader();navigate('place','about');wantedShift=0;wantedLift=0;
   }});
   function placeLabel(button,point,visible,gap=20){projected.copy(point).applyMatrix4(world.matrixWorld).project(camera);const hw=button.offsetWidth/2+10;button.style.left=Math.max(hw,Math.min(host.clientWidth-hw,(projected.x*.5+.5)*host.clientWidth))+'px';button.style.top=Math.max(button.offsetHeight+20,(-projected.y*.5+.5)*host.clientHeight-gap)+'px';button.style.visibility=visible&&projected.z<1?'visible':'hidden';}
-  function frame(now){requestAnimationFrame(frame);frameResize.flush();const frameMs=now-last,dt=Math.min(frameMs/1000,.05);last=now;elapsed+=dt;renderBudget.sample(frameMs,now-startedAt,!document.hidden&&eye.distanceToSquared(wantedEye)<.01&&target.distanceToSquared(wantedTarget)<.01);if(qualityView!==currentView){qualityView=currentView;focusShadows(currentView);systems.forEach(s=>s?.setQuality?.(renderBudget.mode,currentView));}if(currentView==='place'||reduced)hoverTarget.set(0,0,0);hoverValue.lerp(hoverTarget,reduced?1:1-Math.exp(-dt*5));world.rotation.set(hoverValue.x,hoverValue.y,0);world.scale.setScalar(1+hoverValue.z);world.updateMatrixWorld(true);renderer.domElement.dataset.hover=hoverValue.toArray().map(v=>v.toFixed(4)).join(',');
+  function frame(now){requestAnimationFrame(frame);frameResize.flush();const frameMs=now-last,dt=Math.min(frameMs/1000,.05);last=now;elapsed+=dt;renderBudget.sample(frameMs,now-startedAt,!document.hidden&&eye.distanceToSquared(wantedEye)<.01&&target.distanceToSquared(wantedTarget)<.01);if(qualityView!==currentView){qualityView=currentView;focusShadows(currentView);systems.forEach(s=>s?.setQuality?.(renderBudget.mode,currentView));}if(currentView==='place'||currentView==='inside'||reduced)hoverTarget.set(0,0,0);hoverValue.lerp(hoverTarget,reduced?1:1-Math.exp(-dt*5));orbitAngle+=((currentView==='overview'&&worldSelect.value!=='original'?orbit:0)-orbitAngle)*(reduced?1:1-Math.exp(-dt*9));world.rotation.set(hoverValue.x,hoverValue.y+orbitAngle,0);world.scale.setScalar(1+hoverValue.z);world.updateMatrixWorld(true);renderer.domElement.dataset.hover=hoverValue.toArray().map(v=>v.toFixed(4)).join(',');
     const smoothing=reduced?1:1-Math.exp(-dt*3.5);target.lerp(wantedTarget,smoothing);eye.lerp(wantedEye,smoothing);viewShift+=(wantedShift-viewShift)*smoothing;viewLift+=(wantedLift-viewLift)*smoothing;rainFog.density=cameraRainDensity(eye.distanceTo(target),document.body.dataset.backdrop);camera.position.copy(eye);camera.lookAt(target);camera.fov+=(wantedFov-camera.fov)*smoothing;camera.near+=(wantedNear-camera.near)*smoothing;camera.setViewOffset(host.clientWidth,host.clientHeight,-host.clientWidth*viewShift,host.clientHeight*viewLift,host.clientWidth,host.clientHeight);camera.updateMatrixWorld();
     for(const b of labelButtons){const a=anchor(b.dataset.anchor).clone();placeLabel(b,a,currentView==='block');}placeLabel(blockLabel,new T.Vector3(0,27,11),currentView==='overview');
     const leader=document.querySelector('#block-leader');leader.style.visibility=currentView==='overview'?'visible':'hidden';projected.set(-8.3,8,17).applyMatrix4(world.matrixWorld).project(camera);const line=leader.querySelector('line'),tip=leader.querySelector('circle');line.setAttribute('x1',parseFloat(blockLabel.style.left));line.setAttribute('y1',parseFloat(blockLabel.style.top));line.setAttribute('x2',(projected.x*.5+.5)*host.clientWidth);line.setAttribute('y2',(-projected.y*.5+.5)*host.clientHeight);tip.setAttribute('cx',line.getAttribute('x2'));tip.setAttribute('cy',line.getAttribute('y2'));
     const emphasis=hovered==='block';blockHalo.material.opacity+=((emphasis?.065:0)-blockHalo.material.opacity)*(reduced?1:1-Math.exp(-dt*8));
     portfolio.setHighlight?.(emphasis?'block':hovered);
-    for(const s of systems)s?.update?.(reduced?0:dt,elapsed);if(citySky)citySky.render(elapsed,camera.aspect,reduced);else selectBackdrop.update(reduced?0:dt,camera.aspect);apartmentTV.update(camera,currentView,currentPlace);renderer.render(scene,camera);if(Math.floor(elapsed)%3===0){renderer.domElement.dataset.frameMs=renderBudget.averageMs.toFixed(2);renderer.domElement.dataset.drawCalls=renderer.info.render.calls;renderer.domElement.dataset.triangles=renderer.info.render.triangles;renderer.domElement.dataset.camera=eye.toArray().map(v=>v.toFixed(2)).join(',');}
+    for(const s of systems)s?.update?.(reduced?0:dt,elapsed);if(citySky)citySky.render(elapsed,camera.aspect,reduced);else selectBackdrop.update(reduced?0:dt,camera.aspect);apartmentTV.update(camera,currentView==='inside'?'place':currentView,currentPlace);renderer.render(scene,camera);if(Math.floor(elapsed)%3===0){renderer.domElement.dataset.frameMs=renderBudget.averageMs.toFixed(2);renderer.domElement.dataset.drawCalls=renderer.info.render.calls;renderer.domElement.dataset.triangles=renderer.info.render.triangles;renderer.domElement.dataset.camera=eye.toArray().map(v=>v.toFixed(2)).join(',');}
     renderer.domElement.dataset.pursuit=traffic.activity.chase?'active':'quiet';
   }requestAnimationFrame(frame);
   document.body.dataset.cityEdition='original';renderer.domElement.dataset.cityEdition='original';
