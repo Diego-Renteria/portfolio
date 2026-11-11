@@ -1,4 +1,4 @@
-import {renderMakerCard} from './components/engineering-work.js?v=b477ce33502c';
+import {renderMakerCard} from './components/engineering-work.js?v=rooms-1';
 import {createFrameResize,cameraRainDensity} from './components/frame-resize.js?v=b477ce33502c';
 import { THREE as T, createContext } from './components/context.js?v=b477ce33502c';
 import { buildTerrain } from './components/terrain.js?v=b477ce33502c';
@@ -19,7 +19,7 @@ import {applyPageAtmosphere,atmosphereHref} from './components/page-atmosphere.j
 import {loadSurfaceMaps} from './components/surface-maps.js?v=b477ce33502c';
 import {createWeatherMaterials} from './components/weather-materials.js?v=b477ce33502c';
 import {mountApartmentLighting} from './components/apartment-lighting.js?v=b477ce33502c';
-import {mountRecordCard} from './components/record-card.js?v=b477ce33502c';
+import {mountRecordCard} from './components/record-card.js?v=rooms-1';
 import {createCuratedTrees} from './components/curated-trees.js?v=b477ce33502c';
 import {createCuratedCityAssets,upgradeCitySurfaces} from './components/curated-city-assets.js?v=b477ce33502c';
 import {loadImportedTowers} from './components/imported-towers.js?v=b477ce33502c';

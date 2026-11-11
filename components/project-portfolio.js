@@ -40,7 +40,7 @@ function renderIndex() {
   const featured = PROJECTS.find(project => project.id === 'nova-pod');
   return `
     <div class="ep-shell">
-      <div class="ep-utility"><a href="index.html?atmosphere=night">← Back to the city</a>${pdfLink()}</div>
+      <div class="ep-utility"><a href="index.html?atmosphere=night">← Back to the city</a><a href="makerspace.html">Enter the Maker Space ${arrow}</a>${pdfLink()}</div>
       <section class="ep-index-hero" aria-labelledby="work-heading">
         <div class="ep-intro">
           <p class="ep-meta">Diego Renteria <span aria-hidden="true">/</span> Mechanical engineering</p>
