@@ -4,7 +4,7 @@ import { THREE as T, createContext } from './components/context.js?v=b477ce33502
 import { buildTerrain } from './components/terrain.js?v=b477ce33502c';
 import { buildSkyline } from './components/skyline.js?v=b477ce33502c';
 import { buildStreets } from './components/streets.js?v=b477ce33502c';
-import { buildTraffic } from './components/traffic.js?v=b477ce33502c';
+import { buildTraffic } from './components/traffic.js?v=city-traffic-1';
 import { buildGreenery } from './components/greenery.js?v=b477ce33502c';
 import { buildPark } from './components/park.js?v=b477ce33502c';
 import { createRenderBudget } from './components/render-budget.js?v=b477ce33502c';
@@ -57,7 +57,19 @@ try{
   const sun=new T.DirectionalLight('#ffd7a6',3.5);sun.position.set(-175,225,200);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-190,right:190,top:170,bottom:-170,near:1,far:850});sun.shadow.bias=-.00012;sun.shadow.normalBias=.022;scene.add(sun);sun.target.position.set(0,0,11);scene.add(sun.target);
   const fill=new T.DirectionalLight('#bdd3e1',.22);fill.position.set(90,65,-70);scene.add(fill);
   const terrain=buildTerrain(ctx),skyline=buildSkyline(ctx),streets=buildStreets(ctx),park=buildPark(ctx),greenery=buildGreenery(ctx),systems=[terrain,skyline,streets,park,greenery];
-  const traffic=buildTraffic(ctx,{carCount:208,perimeterCars:48}),urban=buildUrbanDetails(ctx);systems.push(traffic,urban);const portfolio=buildPortfolio(ctx);systems.push(portfolio);
+  const trafficPoint=new T.Vector3();
+  const traffic=buildTraffic(ctx,{carCount:208,perimeterCars:48,activity:{
+    random:Math.random,
+    quickStart:new URLSearchParams(location.search).get('traffic')==='chase',
+    isVisible(car){
+      // From street level the front carriageway and center avenue are open;
+      // the surrounding façades conceal the parallel streets behind the block.
+      if(currentView!=='overview'&&car.p.z<18&&(Math.abs(car.p.x)>2.8||car.p.z<-28))return false;
+      trafficPoint.set(car.p.x,car.height*.6,car.p.z).applyMatrix4(world.matrixWorld).project(camera);
+      return Math.abs(trafficPoint.x)<.94&&Math.abs(trafficPoint.y)<.94&&trafficPoint.z>-1&&trafficPoint.z<1;
+    },
+  }}),urban=buildUrbanDetails(ctx);systems.push(traffic,urban);const portfolio=buildPortfolio(ctx);systems.push(portfolio);
+  renderer.domElement.dataset.vehicleModels=String(new Set(traffic.cars.map(car=>car.model)).size);
   const rainAtmosphere=buildRainAtmosphere(ctx);systems.push(rainAtmosphere);
   const lighting=buildCityLighting(ctx,streets.lampSites);systems.push(lighting);
   rainAtmosphere.setLampSites(streets.lampSites);
@@ -124,6 +136,7 @@ try{
     const emphasis=hovered==='block';blockHalo.material.opacity+=((emphasis?.065:0)-blockHalo.material.opacity)*(reduced?1:1-Math.exp(-dt*8));
     portfolio.setHighlight?.(emphasis?'block':hovered);
     for(const s of systems)s?.update?.(reduced?0:dt,elapsed);selectBackdrop.update(reduced?0:dt,camera.aspect);apartmentTV.update(camera,currentView,currentPlace);renderer.render(scene,camera);if(Math.floor(elapsed)%3===0){renderer.domElement.dataset.frameMs=renderBudget.averageMs.toFixed(2);renderer.domElement.dataset.drawCalls=renderer.info.render.calls;renderer.domElement.dataset.triangles=renderer.info.render.triangles;renderer.domElement.dataset.camera=eye.toArray().map(v=>v.toFixed(2)).join(',');}
+    renderer.domElement.dataset.pursuit=traffic.activity.chase?'active':'quiet';
   }requestAnimationFrame(frame);
   document.body.dataset.cityEdition='original';renderer.domElement.dataset.cityEdition='original';
 

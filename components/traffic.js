@@ -1,10 +1,11 @@
-import {createVehicleLibrary} from './vehicle-models.js?v=b477ce33502c';
-import {createVehicleLightSpill} from './vehicle-light-spill.js?v=b477ce33502c';
+import {createVehicleLibrary} from './vehicle-models.js?v=city-traffic-1';
+import {createVehicleLightSpill} from './vehicle-light-spill.js?v=city-traffic-1';
 import {updateBrakeLight,brakeLensColor} from './vehicle-braking.js?v=b477ce33502c';
 import {insideLand,flatRoadXs,flatRoadZs,inStadiumReserve} from './geography.js?v=b477ce33502c';
 import {buildIntersectionSignals,MAIN_INTERSECTION} from './intersection-signals.js?v=b477ce33502c';
 import {createActuatedController} from './traffic-controller.js?v=b477ce33502c';
-import {driverProfile,freeRoadSpeed} from './driving-profile.js?v=b477ce33502c';
+import {driverProfile,freeRoadSpeed} from './driving-profile.js?v=city-traffic-1';
+import {createTrafficActivity,heavyModel,patrolFlash,personalityFor,samplePassingPose} from './traffic-activity.js?v=city-traffic-1';
 const mod=(v,n)=>((v%n)+n)%n;
 // Shared compatible movements form platoons; crossing paths yield before the stop bar.
 export function buildTraffic({THREE:T,world,random=Math.random},network=null){
@@ -13,13 +14,15 @@ export function buildTraffic({THREE:T,world,random=Math.random},network=null){
   const group=new T.Group();group.name='Downtown flowing pack-car traffic';world.add(group);
   const materials={},palette=['#b73d2c','#dedcd2','#356574','#333d43','#c9982e','#174f42','#6c7179','#df6429','#314993'];
   function mat(key,color,metalness=0,roughness=.6,emissive=0){return materials[key]??=new T.MeshStandardMaterial({color,metalness,roughness,emissive:emissive?color:0,emissiveIntensity:emissive})}
-  palette.forEach((color,i)=>materials['paint'+i]=new T.MeshPhysicalMaterial({color,metalness:.5,roughness:.23,clearcoat:.8,clearcoatRoughness:.17}));
+  materials.fleetPaint=new T.MeshPhysicalMaterial({color:'#ffffff',metalness:.5,roughness:.23,clearcoat:.8,clearcoatRoughness:.17,emissive:'#ffffff',emissiveIntensity:0});
   mat('tire','#1e2327',0,.95);mat('rim','#bec2c2',.8,.24);mat('glass','#263f4b',.6,.16);mat('chrome','#aeb7b6',.8,.24);mat('bed','#242c30',.15,.7);mat('cargo','#e3ded1',.1,.6);
   mat('headlight','#fff1c9',0,.25,.7);mat('taillight','#ffffff',0,.28,.5);
+  mat('beaconRed','#ffffff',0,.28,.85);mat('beaconBlue','#ffffff',0,.28,.85);
   materials.assetDetails=new T.MeshStandardMaterial({color:'#ffffff',vertexColors:true,roughness:.5,metalness:.25});
   materials.indicator=new T.MeshStandardMaterial({color:'#ffffff',emissive:'#ffffff',emissiveIntensity:1.7,roughness:.3});
   const coloredEmission=m=>{m.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n#ifdef USE_COLOR\n totalEmissiveRadiance *= vColor.rgb;\n#endif');};m.customProgramCacheKey=()=>"traffic-instance-emission-v1";};coloredEmission(materials.indicator);
   coloredEmission(materials.taillight);
+  coloredEmission(materials.fleetPaint);coloredEmission(materials.beaconRed);coloredEmission(materials.beaconBlue);
   const batches=new Map();
   const dummy=new T.Object3D(),baseMatrix=new T.Matrix4(),localMatrix=new T.Matrix4(),color=new T.Color();
   const junctions=[];
@@ -69,7 +72,15 @@ export function buildTraffic({THREE:T,world,random=Math.random},network=null){
       events.push({j,s:mod(at,total),stop:mod(stop,total),release:mod(release,total),turn,cornerIndex,incoming,outgoing,path,radius:r,movement:[incoming.dx,incoming.dz,outgoing.dx,outgoing.dz].map(v=>Math.round(v)).join(',')});
     }
     let stadiumClear=true;for(let d=0;d<total;d+=.5){const p=sample(d);if(inStadiumReserve(p.x,p.z,1.6)){stadiumClear=false;break;}}
-    return{sample,length:total,events,corners,radius:r,stadiumClear};
+    function locate({x,z,dx,dz}){
+      for(const segment of segments){
+        if(segment.kind!=='line'||dx*segment.dir.x+dz*segment.dir.y<.9999)continue;
+        const rx=x-segment.from.x,rz=z-segment.from.y,along=rx*dx+rz*dz;
+        if(along>3&&along<segment.length-3&&Math.abs(rx*dz-rz*dx)<.02)return segment.start+along;
+      }
+      return null;
+    }
+    return{sample,locate,length:total,events,corners,radius:r,stadiumClear};
   }
   const routes=[];
   function addRoute(x0,x1,z0,z1,reverse=false){const r=routeRect(x0,x1,z0,z1,reverse,((routes.length%5)-2)*.035);for(let s=0;s<r.length;s+=1){const p=r.sample(s);if(!insideLand(p.x,p.z,7))return}routes.push(r)}
@@ -83,19 +94,38 @@ export function buildTraffic({THREE:T,world,random=Math.random},network=null){
     const before=routes.length;addRoute(roadXs[a],roadXs[b],roadZs[c],roadZs[d],reverse);
     if(routes.length>before){routes.at(-1).perimeter=true;perimeterRoutes.push(routes.at(-1));}
   }
-  const {vehicle}=createVehicleLibrary(T),cars=[],fleet=['sedan-sports','sedan','hatchback-sports','suv-luxury','sedan','taxi','sedan-sports','truck','sedan','van','hatchback-sports','police','sedan','delivery'];
+  const {vehicle}=createVehicleLibrary(T),cars=[];
+  const baseFleet=['sedan-sports','sedan','hatchback-sports','suv-luxury','sedan','taxi','sedan-sports','truck','sedan','van','hatchback-sports','police','sedan','delivery'];
+  const fleet=network?.activity?[
+    'street-coupe','sedan','patrol-sedan','street-hatch','classic-muscle','city-suv',
+    'work-pickup','executive-sedan','patrol-interceptor','open-roadster','parcel-van',
+    'sedan','service-truck','suv-luxury','city-ambulance','hatchback-sports','delivery',
+    'patrol-suv','executive-sedan','city-firetruck','street-hatch','sedan-sports','van',
+    'open-roadster','sedan','classic-muscle','street-coupe','truck','city-suv','work-pickup',
+  ]:baseFleet;
   for(let i=0;i<(network?.carCount||160);i++){
     const choices=perimeterRoutes.length&&i>=(network.carCount-network.perimeterCars)?perimeterRoutes:coreRoutes;
-    let route=choices[i%choices.length];const model=vehicle(fleet[i%fleet.length],'paint'+i%palette.length);let s=0,p,found=false;
+    let route=choices[i%choices.length];const model=vehicle(fleet[i%fleet.length],'fleetPaint');let s=0,p,found=false;
     for(let trial=0;trial<5000;trial++){route=choices[(i+Math.floor(trial/500))%choices.length];s=random()*route.length;p=route.sample(s);if(cars.every(c=>Math.hypot(c.p.x-p.x,c.p.z-p.z)>5)&&junctions.every(j=>Math.hypot(j.x-p.x,j.z-p.z)>7.2)){found=true;break}}
-    if(found){const profile=driverProfile(model.model,random());cars.push({...model,route,s,p,speed:0,cruise:profile.cruise,lock:null,committed:false,indicator:null,distanceTravelled:0,active:true,acceleration:0,maxAcceleration:(.95+random()*.45)*profile.throttle,comfortBrake:2.2+random()*.5,jerk:1.9+random()*.55,reactionTime:.38+random()*.65,readyAt:null,stoppedFor:1,departureAt:null,turnPace:.83+random()*.12});}
+    if(found){
+      const seed=random(),profile=driverProfile(model.model,seed);
+      const personality=network?.activity?personalityFor(model.model,(seed*2.63)%1):{name:'steady',pace:1,reaction:1,turn:1};
+      cars.push({...model,route,s,p,paint:palette[i%palette.length],speed:0,cruise:profile.cruise*personality.pace,
+        personality:personality.name,nextRouteChoice:7+(i%23),lock:null,committed:false,indicator:null,
+        distanceTravelled:0,active:true,acceleration:0,maxAcceleration:(.95+random()*.45)*profile.throttle,
+        comfortBrake:2.2+random()*.5,jerk:1.9+random()*.55,reactionTime:(.38+random()*.65)*personality.reaction,
+        readyAt:null,stoppedFor:1,departureAt:null,turnPace:(.83+random()*.12)*personality.turn});
+    }
   }
   function allocate(parts,dynamic=false){for(const p of parts){const key=p.geo.uuid+':'+p.material+(dynamic?'d':'s');let batch=batches.get(key);if(!batch){batch={geo:p.geo,material:p.material,parts:[],dynamic};batches.set(key,batch)}p.batch=batch;p.index=batch.parts.length;batch.parts.push(p)}}
   for(const car of cars)allocate(car.parts,true);
-  const headlightSpill=createVehicleLightSpill(T,group,cars,{roadY:network?.id?.095:.057});
+  const headlightSpill=createVehicleLightSpill(T,group,cars,{roadY:network?.id?.095:.057,patrolGlow:!!network?.activity});
   for(const batch of batches.values()){
     batch.mesh=new T.InstancedMesh(batch.geo,materials[batch.material],batch.parts.length);batch.mesh.castShadow=true;batch.mesh.receiveShadow=true;batch.mesh.frustumCulled=false;
     if(batch.dynamic)batch.mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);group.add(batch.mesh);
+  }
+  for(const car of cars)for(const part of car.parts){
+    if(part.material==='fleetPaint')part.batch.mesh.setColorAt(part.index,color.set(car.paint));
   }
   function put(p,parent){dummy.position.fromArray(p.position);dummy.scale.fromArray(p.scale);dummy.rotation.set(...p.rotation);dummy.updateMatrix();localMatrix.copy(dummy.matrix);if(parent)localMatrix.premultiply(parent);p.batch.mesh.setMatrixAt(p.index,localMatrix)}
   let elapsed=0,stadiumEnabled=false,nextRestoreCheck=0;
@@ -106,13 +136,14 @@ export function buildTraffic({THREE:T,world,random=Math.random},network=null){
     if(distance>=36||corner.index===car.plannedCorner)return;
     // Quantized, bounded radii keep reservation caching finite. A fresh draw is
     // made for this visit, excluding both the previous visit and previous turn.
-    const minimum=['truck','delivery','van'].includes(car.model)?1.5:1.0;
+    const minimum=heavyModel(car.model)?1.5:1.0;
     const options=Array.from({length:Math.round((3.8-minimum)*10)+1},(_,i)=>Math.round((minimum+i*.1)*10)/10).filter(r=>Math.abs(r-car.turnRadii[corner.index])>=.399&&Math.abs(r-(car.lastTurnRadius??0))>=.399);
     const radius=options[Math.min(options.length-1,Math.floor(random()*options.length))];
     car.turnRadii[corner.index]=radius;car.plannedCorner=corner.index;car.lastTurnRadius=radius;car.turnPlans++;
     for(const e of car.turnEvents)if(e.cornerIndex===corner.index){e.radius=radius;e.path=[];const span=mod(e.release-e.stop,car.route.length);for(let d=0;d<=span;d+=.55)e.path.push(car.route.sample(e.stop+d,car.turnRadii));}
   }
-  const sampleCar=(car,distance)=>car.route.sample(distance,car.turnRoute===car.route?car.turnRadii:undefined);
+  const sampleBase=(car,distance)=>car.route.sample(distance,car.turnRoute===car.route?car.turnRadii:undefined);
+  const sampleCar=(car,distance)=>samplePassingPose(sampleBase(car,distance),distance,car.pass,car.route.length);
   const signed=(v,n)=>mod(v+n/2,n)-n/2,conflictCache=new Map();
   // Leave room for the controller and the gradual build-up of braking force.
   // The linear final approach releases the brake gently at walking speed.
@@ -183,6 +214,7 @@ export function buildTraffic({THREE:T,world,random=Math.random},network=null){
     }
     return false;
   }
+  const activity=network?.activity?createTrafficActivity({cars,routes,random,sampleBase,hasRoom:clearPose,...network.activity}):null;
   function update(dt){
     dt=Math.min(Math.max(dt,0),.05);elapsed+=dt;
     if(dt>0){
@@ -208,6 +240,7 @@ export function buildTraffic({THREE:T,world,random=Math.random},network=null){
     }
     signals.update();
     if(dt>0&&!stadiumEnabled&&elapsed>nextRestoreCheck){nextRestoreCheck=elapsed+.5;for(const car of cars)if(!car.active)tryRestore(car);}
+    if(dt>0)activity?.update(elapsed);
     if(dt>0)for(const car of cars){
       if(!car.active)continue;
       prepareTurn(car);
@@ -217,11 +250,18 @@ export function buildTraffic({THREE:T,world,random=Math.random},network=null){
         const passed=signed(car.s-car.lock.release,car.route.length);
         if(passed>0||!car.committed&&(!approachClear(car,car.lock)||!signalAllows(car,car.lock)))release(car);
       }
-      let desired=freeRoadSpeed(car,distance=>sampleCar(car,distance)),maxDistance=Infinity;
+      let desired=freeRoadSpeed(car,distance=>sampleBase(car,distance),{speedMultiplier:activity?.pace(car)??1}),maxDistance=Infinity;
       car.freeRoadTarget=desired;
-      const anticipation=Math.max(14,car.speed*3+4);
+      const brake=car.comfortBrake*.65;
+      const reservationDistance=Math.max(4.8,car.speed*(.85+brake/(2*car.jerk))+car.speed*car.speed/(2*brake)+2.5);
+      const anticipation=Math.max(14,car.speed*3+4,activity?reservationDistance+4:0);
       let leader=null,leaderDistance=Infinity;
       const next=car.turnEvents.map(e=>({e,d:mod(e.stop-car.length/2-car.s,car.route.length)})).sort((a,b)=>a.d-b.d)[0];
+      if(next&&activity&&desired>car.cruise){
+        // Fast drivers can stretch their legs between blocks. Ease off before
+        // reaching the box so a late cross-traffic decision can still be smooth.
+        desired=Math.min(desired,Math.sqrt(car.cruise**2+2*brake*Math.max(0,next.d-14)));
+      }
       car.indicator=car.lock?.turn||((next&&next.d<12)?next.e.turn:null);
       if(next&&next.d<anticipation&&next.e!==car.lock){
         const{e,d}=next,signalOpen=signalAllows(car,e),permitted=signalOpen&&canReserve(car,e);
@@ -230,14 +270,12 @@ export function buildTraffic({THREE:T,world,random=Math.random},network=null){
         // A faster approaching car must secure its crossing before it reaches
         // comfortable braking distance. Waiting for the old fixed 4.8-unit
         // threshold let a conflicting movement claim the box too late to stop.
-        const brake=car.comfortBrake*.65;
-        const reservationDistance=Math.max(4.8,car.speed*(.85+brake/(2*car.jerk))+car.speed*car.speed/(2*brake)+2.5);
         if(permitted&&d<reservationDistance&&!car.lock){e.j.owners.add(car);car.lock=e;car.committed=false;}
         if(!permitted){const clearance=Math.max(0,d-.12);desired=Math.min(desired,stoppingSpeed(car,clearance));maxDistance=clearance;if(clearance<.03)desired=0;}
       }
       // Compatible leaders form continuous platoons; intersecting paths yield.
       for(const other of cars){
-        if(other===car||!other.active)continue;const dx=other.p.x-car.p.x,dz=other.p.z-car.p.z,ahead=dx*car.p.dx+dz*car.p.dz,lateral=Math.abs(dx*car.p.dz-dz*car.p.dx),aligned=other.p.dx*car.p.dx+other.p.dz*car.p.dz;
+        if(other===car||!other.active||other===car.pass?.leader)continue;const dx=other.p.x-car.p.x,dz=other.p.z-car.p.z,ahead=dx*car.p.dx+dz*car.p.dz,lateral=Math.abs(dx*car.p.dz-dz*car.p.dx),aligned=other.p.dx*car.p.dx+other.p.dz*car.p.dz;
         const bending=!!(car.p.curvature||other.p.curvature);
         // A leader leaving a bend enters the straight following cone gradually.
         // Use chord separation there, rather than a shortened tangent projection,
@@ -281,10 +319,20 @@ export function buildTraffic({THREE:T,world,random=Math.random},network=null){
     }
     for(const car of cars){
       car.p=sampleCar(car,car.s);dummy.position.set(car.p.x,.045,car.p.z);dummy.rotation.set(0,Math.atan2(car.p.dx,car.p.dz),0);dummy.scale.setScalar(car.active?1:0);dummy.updateMatrix();baseMatrix.copy(dummy.matrix);
-      for(const p of car.parts){put(p,baseMatrix);if(p.indicatorSide){const on=car.indicator===p.indicatorSide&&elapsed%.9<.45;p.batch.mesh.setColorAt(p.index,color.set(on?'#ff9e13':'#21160a'))}else if(p.material==='taillight')p.batch.mesh.setColorAt(p.index,brakeLensColor(color,car));}
+      for(const p of car.parts){
+        put(p,baseMatrix);
+        if(p.indicatorSide){
+          const turn=car.pass?(mod(car.s-car.pass.start,car.route.length)<car.pass.span/2?'left':'right'):car.indicator;
+          const on=turn===p.indicatorSide&&elapsed%.9<.45;p.batch.mesh.setColorAt(p.index,color.set(on?'#ff9e13':'#21160a'));
+        }else if(p.material==='taillight')p.batch.mesh.setColorAt(p.index,brakeLensColor(color,car));
+        else if(p.material==='beaconRed'||p.material==='beaconBlue'){
+          const red=p.material==='beaconRed',on=car.pursuitRole==='police'&&patrolFlash(elapsed,red);
+          p.batch.mesh.setColorAt(p.index,color.set(on?(red?'#ff3438':'#437dff'):(red?'#540b16':'#1a2860')));
+        }
+      }
     }
     for(const batch of batches.values())if(batch.dynamic){batch.mesh.instanceMatrix.needsUpdate=true;if(batch.mesh.instanceColor)batch.mesh.instanceColor.needsUpdate=true}
-    headlightSpill.update();
+    headlightSpill.update(elapsed,activity?.chase?.officer??null);
   }
   function tryRestore(car){
     for(let k=0;k<1600;k++){
@@ -297,12 +345,13 @@ export function buildTraffic({THREE:T,world,random=Math.random},network=null){
   function setStadium(value){
     stadiumEnabled=!!value;
     for(const car of cars){
-      if(stadiumEnabled&&!car.route.stadiumClear){release(car);car.active=false;car.speed=0;car.acceleration=0;car.readyAt=null;car.indicator=null;}
+      car.requireStadiumClear=stadiumEnabled;
+      if(stadiumEnabled&&!car.route.stadiumClear){release(car);car.pass=null;car.active=false;car.speed=0;car.acceleration=0;car.readyAt=null;car.indicator=null;}
       else if(!stadiumEnabled&&!car.active)tryRestore(car);
     }
     update(0);
   }
-  function setNight(value){materials.headlight.emissiveIntensity=value?3:.7;materials.taillight.emissiveIntensity=value?2:.5;for(let i=0;i<palette.length;i++){const m=materials['paint'+i];m.emissive.copy(m.color);m.emissiveIntensity=value?.075:0;}signals.setNight(value);signals.update(elapsed);headlightSpill.setNight(value);}
+  function setNight(value){materials.headlight.emissiveIntensity=value?3:.7;materials.taillight.emissiveIntensity=value?2:.5;materials.fleetPaint.emissiveIntensity=value?.075:0;signals.setNight(value);signals.update(elapsed);headlightSpill.setNight(value);}
   update(0);
-  return{update,setNight,setStadium,setQuality:headlightSpill.setQuality,headlightSpill,group,signals,controller,cars,junctions,routes,sampleCar,get elapsed(){return elapsed}};
+  return{update,setNight,setStadium,setQuality:headlightSpill.setQuality,headlightSpill,group,signals,controller,cars,junctions,routes,sampleCar,activity,get elapsed(){return elapsed}};
 }
