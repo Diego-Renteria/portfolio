@@ -134,10 +134,11 @@ export function buildStreets(ctx) {
     if(i<xs.length)sign.rotation.y=Math.PI/2;
     signs.push(sign);
   }
-  const unitBox=new T.BoxGeometry(1,1,1),unitCylinder=new T.CylinderGeometry(1,1,1,12);
+  const curveable=[],unitBox=new T.BoxGeometry(1,1,1),curvedBox=new T.BoxGeometry(1,1,1,8,1,8),unitCylinder=new T.CylinderGeometry(1,1,1,12);
   const dummy=new T.Object3D();
   for(const [id,items]of batches){
     const [zone,kind,key]=id.split(':');const mesh=new T.InstancedMesh(kind==='box'?unitBox:unitCylinder,mats[key],items.length);
+    if(kind==='box'&&['sidewalk','curb','yellow'].includes(key)&&items.some(p=>Math.max(p.w,p.d)>10))curveable.push(mesh);
     mesh.name=`streets-${id}`;mesh.receiveShadow=key!=='pool';mesh.castShadow=['iron','wood','red','steel'].includes(key);
     items.forEach((p,i)=>{dummy.position.set(p.x,p.y,p.z);dummy.rotation.set(0,p.ry,0);dummy.scale.set(p.w,p.h,p.d);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);});
     mesh.instanceMatrix.needsUpdate=true;(zone==='stadium'?stadiumRoads:root).add(mesh);
@@ -166,5 +167,5 @@ export function buildStreets(ctx) {
     });
   }
   root.userData.benchSites=benchSites;
-  return {group:root,benchSites,roadNightFill,lampSites:lampSites.filter(p=>flat(p.x,p.z)),setStadium(enabled){stadiumRoads.visible=!enabled;},setNight(night){roadNightFill.value=night?.14:0;mats.lamp.emissiveIntensity=night?4.8:.015;mats.pool.opacity=0;},setStreetNames};
+  return {group:root,setGlobe(active){for(const mesh of curveable)mesh.geometry=active?curvedBox:unitBox;},benchSites,roadNightFill,lampSites:lampSites.filter(p=>flat(p.x,p.z)),setStadium(enabled){stadiumRoads.visible=!enabled;},setNight(night){roadNightFill.value=night?.14:0;mats.lamp.emissiveIntensity=night?4.8:.015;mats.pool.opacity=0;},setStreetNames};
 }

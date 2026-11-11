@@ -1,0 +1,338 @@
+[
+  {
+    "id": "sofa_02",
+    "path": "assets/curated/sofa_02/sofa_02.gltf",
+    "source": "https://polyhaven.com/a/sofa_02",
+    "license": "CC0-1.0",
+    "sourceVariant": "1k",
+    "textureSize": 768,
+    "geometryBytes": 74864,
+    "textureBytes": 153088,
+    "triangles": 2728,
+    "bounds": {
+      "min": [
+        -0.903316353505943,
+        0.00020572543144226074,
+        -0.4776984825730324
+      ],
+      "max": [
+        0.9038509977399372,
+        0.7096946537494659,
+        0.34005289524793625
+      ],
+      "size": [
+        1.8071673512458801,
+        0.7094889283180237,
+        0.8177513778209686
+      ]
+    }
+  },
+  {
+    "id": "modern_coffee_table_01",
+    "path": "assets/curated/modern_coffee_table_01/modern_coffee_table_01.gltf",
+    "source": "https://polyhaven.com/a/modern_coffee_table_01",
+    "license": "CC0-1.0",
+    "sourceVariant": "1k",
+    "textureSize": 768,
+    "geometryBytes": 154864,
+    "textureBytes": 119996,
+    "triangles": 4504,
+    "bounds": {
+      "min": [
+        -0.2999998927116394,
+        -0.00011512637138366699,
+        -0.6006690263748169
+      ],
+      "max": [
+        0.3000001311302185,
+        0.3898848593235016,
+        0.601161003112793
+      ],
+      "size": [
+        0.6000000238418579,
+        0.38999998569488525,
+        1.2018300294876099
+      ]
+    }
+  },
+  {
+    "id": "potted_plant_04",
+    "path": "assets/curated/potted_plant_04/potted_plant_04.gltf",
+    "source": "https://polyhaven.com/a/potted_plant_04",
+    "license": "CC0-1.0",
+    "sourceVariant": "1k",
+    "textureSize": 768,
+    "geometryBytes": 241800,
+    "textureBytes": 304778,
+    "triangles": 8929,
+    "bounds": {
+      "min": [
+        -0.08394315838813782,
+        0.0003753884811885655,
+        -0.08394315838813782
+      ],
+      "max": [
+        0.08394316583871841,
+        0.26783305406570435,
+        0.1008082702755928
+      ],
+      "size": [
+        0.16788632422685623,
+        0.2674576655845158,
+        0.18475142866373062
+      ]
+    }
+  },
+  {
+    "id": "ceramic_vase_02",
+    "path": "assets/curated/ceramic_vase_02/ceramic_vase_02.gltf",
+    "source": "https://polyhaven.com/a/ceramic_vase_02",
+    "license": "CC0-1.0",
+    "sourceVariant": "1k",
+    "textureSize": 768,
+    "geometryBytes": 293776,
+    "textureBytes": 206886,
+    "triangles": 11128,
+    "bounds": {
+      "min": [
+        -0.10918986052274704,
+        0.0011435861233621836,
+        -0.10919084399938583
+      ],
+      "max": [
+        0.10918987542390823,
+        0.3103283941745758,
+        0.10919087380170822
+      ],
+      "size": [
+        0.21837973594665527,
+        0.3091848080512136,
+        0.21838171780109406
+      ]
+    }
+  },
+  {
+    "id": "modern_wooden_cabinet",
+    "path": "assets/curated/modern_wooden_cabinet/modern_wooden_cabinet.gltf",
+    "source": "https://polyhaven.com/a/modern_wooden_cabinet",
+    "license": "CC0-1.0",
+    "sourceVariant": "1k",
+    "textureSize": 768,
+    "geometryBytes": 1170136,
+    "textureBytes": 164708,
+    "triangles": 24976,
+    "bounds": {
+      "min": [
+        -1.220000147819519,
+        1.6823410987854004e-05,
+        -0.27000001072883606
+      ],
+      "max": [
+        1.2200002670288086,
+        0.680159330368042,
+        0.25
+      ],
+      "size": [
+        2.4400004148483276,
+        0.6801425069570541,
+        0.5200000107288361
+      ]
+    }
+  },
+  {
+    "id": "dining_table",
+    "path": "assets/curated/dining_table/dining_table.gltf",
+    "source": "https://polyhaven.com/a/dining_table",
+    "license": "CC0-1.0",
+    "sourceVariant": "1k",
+    "textureSize": 768,
+    "geometryBytes": 30992,
+    "textureBytes": 301606,
+    "triangles": 1048,
+    "bounds": {
+      "min": [
+        -1.1328890323638916,
+        -0.004275118932127953,
+        -0.6781940460205078
+      ],
+      "max": [
+        1.1230069398880005,
+        0.872714102268219,
+        0.712041974067688
+      ],
+      "size": [
+        2.255895972251892,
+        0.876989221200347,
+        1.3902360200881958
+      ]
+    }
+  },
+  {
+    "id": "bench_vice_01",
+    "path": "assets/curated/bench_vice_01/bench_vice_01.gltf",
+    "source": "https://polyhaven.com/a/bench_vice_01",
+    "license": "CC0-1.0",
+    "sourceVariant": "1k",
+    "textureSize": 768,
+    "geometryBytes": 131404,
+    "textureBytes": 328346,
+    "triangles": 2864,
+    "bounds": {
+      "min": [
+        -0.10035783052444458,
+        -0.08558614552021027,
+        -0.18122732639312744
+      ],
+      "max": [
+        0.1001245379447937,
+        0.19956251978874207,
+        0.21449433267116547
+      ],
+      "size": [
+        0.20048236846923828,
+        0.28514866530895233,
+        0.3957216590642929
+      ]
+    }
+  },
+  {
+    "id": "desk_lamp_arm_01",
+    "path": "assets/curated/desk_lamp_arm_01/desk_lamp_arm_01.gltf",
+    "source": "https://polyhaven.com/a/desk_lamp_arm_01",
+    "license": "CC0-1.0",
+    "sourceVariant": "1k",
+    "textureSize": 768,
+    "geometryBytes": 736804,
+    "textureBytes": 312564,
+    "triangles": 24102,
+    "bounds": {
+      "min": [
+        -0.11847317218780518,
+        -0.08799377083778381,
+        -0.29663750529289246
+      ],
+      "max": [
+        0.08325615525245667,
+        0.8046169281005859,
+        0.3172350823879242
+      ],
+      "size": [
+        0.20172932744026184,
+        0.8926106989383698,
+        0.6138725876808167
+      ]
+    }
+  },
+  {
+    "id": "adjustable_wrench",
+    "path": "assets/curated/adjustable_wrench/adjustable_wrench.gltf",
+    "source": "https://polyhaven.com/a/adjustable_wrench",
+    "license": "CC0-1.0",
+    "sourceVariant": "1k",
+    "textureSize": 768,
+    "geometryBytes": 189556,
+    "textureBytes": 369588,
+    "triangles": 5390,
+    "bounds": {
+      "min": [
+        -0.052672307938337326,
+        -0.04867038130760193,
+        -0.0152960866689682
+      ],
+      "max": [
+        0.015671877190470695,
+        0.20545992255210876,
+        0.015294257551431656
+      ],
+      "size": [
+        0.06834418512880802,
+        0.2541303038597107,
+        0.030590344220399857
+      ]
+    }
+  },
+  {
+    "id": "plastic_crate_01",
+    "path": "assets/curated/plastic_crate_01/plastic_crate_01.gltf",
+    "source": "https://polyhaven.com/a/plastic_crate_01",
+    "license": "CC0-1.0",
+    "sourceVariant": "1k",
+    "textureSize": 768,
+    "geometryBytes": 789920,
+    "textureBytes": 384872,
+    "triangles": 18320,
+    "bounds": {
+      "min": [
+        -0.14900031685829163,
+        0.0,
+        -0.20400206744670868
+      ],
+      "max": [
+        0.14900031685829163,
+        0.2641694247722626,
+        0.20400206744670868
+      ],
+      "size": [
+        0.29800063371658325,
+        0.2641694247722626,
+        0.40800413489341736
+      ]
+    }
+  },
+  {
+    "id": "portable_cassette_player",
+    "path": "assets/curated/portable_cassette_player/portable_cassette_player.gltf",
+    "source": "https://polyhaven.com/a/portable_cassette_player",
+    "license": "CC0-1.0",
+    "sourceVariant": "1k",
+    "textureSize": 768,
+    "geometryBytes": 511012,
+    "textureBytes": 364492,
+    "triangles": 13307,
+    "bounds": {
+      "min": [
+        -0.06401301268488169,
+        -0.05623024143278599,
+        -0.01659754477441311
+      ],
+      "max": [
+        0.10824228823184967,
+        0.07407537661492825,
+        0.023074007593095303
+      ],
+      "size": [
+        0.17225530091673136,
+        0.13030561804771423,
+        0.03967155236750841
+      ]
+    }
+  },
+  {
+    "id": "wooden_stool_02",
+    "path": "assets/curated/wooden_stool_02/wooden_stool_02.gltf",
+    "source": "https://polyhaven.com/a/wooden_stool_02",
+    "license": "CC0-1.0",
+    "sourceVariant": "1k",
+    "textureSize": 768,
+    "geometryBytes": 268448,
+    "textureBytes": 367438,
+    "triangles": 11146,
+    "bounds": {
+      "min": [
+        -0.13356663286685944,
+        0.00016927937394939363,
+        -0.09568127989768982
+      ],
+      "max": [
+        0.13161049783229828,
+        0.18209776282310486,
+        0.08744602650403976
+      ],
+      "size": [
+        0.2651771306991577,
+        0.18192848344915546,
+        0.18312730640172958
+      ]
+    }
+  }
+]

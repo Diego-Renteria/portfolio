@@ -2,7 +2,7 @@ import * as T from './three.module.js?v=b477ce33502c';
 import {applyPageAtmosphere} from './components/page-atmosphere.js?v=b477ce33502c';
 import {mountApartmentTV} from './components/apartment-tv.js?v=b477ce33502c';
 import {ROOMS,UI_STYLES,TRACK_ID,entriesFor,turntableEntry} from './components/room-catalog.js?v=rooms-1';
-import {buildRoom,disposeRoom,createTVScreen} from './components/room-scene.js?v=loft-1';
+import {buildRoom,disposeRoom,createTVScreen} from './components/room-scene.js?v=gallery-1';
 
 const kind=document.body.dataset.room,info=ROOMS[kind],entries=entriesFor(kind);
 const root=document.querySelector('#room-content'),$=id=>document.getElementById(id);
@@ -13,6 +13,7 @@ const query=new URLSearchParams(location.search),requested=Number(query.get('roo
 let preset=Number.isInteger(requested)&&requested>=1&&requested<=10?requested-1:0;
 let style=UI_STYLES.some(([id])=>id===query.get('glass'))?query.get('glass'):'pearl';
 let edition=query.has('pass')?Math.max(0,Math.min(2,Number(query.get('pass'))||0)):-1;
+let upperLibrary=false;
 let shelf=0,active=null,room,renderer,screen,player,tv,returnFocus;
 let stageVisible=true;
 let catalog=new Map(),collectionOffset=0,roomMotion=!reduced,width=1,height=1;
@@ -52,6 +53,7 @@ root.innerHTML=`
         ${stageOptions}
         <div class="room-actions">
           <button type="button" id="room-reset" hidden>Back to room</button>
+          ${kind==='library'?'<button type="button" id="library-floor" aria-pressed="false" hidden>Go upstairs</button>':''}
           <button type="button" id="room-motion" aria-pressed="${!roomMotion}">${roomMotion?'Pause motion':'Resume motion'}</button>
         </div>
       </div>
@@ -140,6 +142,7 @@ function layoutRoom(){
   const previous=room;
   if(previous){if(screen)screen.removeFromParent();scene.remove(previous.world);disposeRoom(previous,screen);}
   room=buildRoom(kind,preset,{screen,musicPage:shelf,edition,reference:edition===-1});
+  if($('library-floor'))$('library-floor').hidden=!room.profile.upperCamera;
   document.body.toggleAttribute('data-reference-remodel',Boolean(room.aim));
   scene.add(room.world);
   pins.replaceChildren();pinRecords.length=0;
@@ -161,9 +164,13 @@ function updateShot(){
   const narrow=width/height<1.05;
   camera.fov=room.aim&&!subject?(narrow?64:52):narrow?47:36;
   if(!subject){
-    wantedEye.fromArray(room.camera);
-    if(room.aim)wantedAim.fromArray(room.aim);else wantedAim.set(0,1.53,-.97);
-    if(narrow)wantedEye.z+=2.40;
+    if(upperLibrary&&room.profile.upperCamera){
+      wantedEye.fromArray(room.profile.upperCamera);wantedAim.fromArray(room.profile.upperAim);
+    }else{
+      wantedEye.fromArray(room.camera);
+      if(room.aim)wantedAim.fromArray(room.aim);else wantedAim.set(0,1.53,-.97);
+      if(narrow)wantedEye.z+=2.40;
+    }
   }else if(subject.screen){
     screen.updateWorldMatrix(true,false);
     const p=screen.getWorldPosition(new T.Vector3()),forward=new T.Vector3(0,0,1).transformDirection(screen.matrixWorld);
@@ -229,6 +236,12 @@ $('room-design').addEventListener('change',()=>{
 $('glass-style').addEventListener('change',()=>{setStyle($('glass-style').value,true);remember();});
 $('glass-close').onclick=()=>clearSelection();
 $('room-reset').onclick=()=>clearSelection();
+if($('library-floor'))$('library-floor').onclick=()=>{
+  upperLibrary=!upperLibrary;
+  $('library-floor').setAttribute('aria-pressed',String(upperLibrary));
+  $('library-floor').textContent=upperLibrary?'Go downstairs':'Go upstairs';
+  clearSelection(false);
+};
 $('room-motion').onclick=()=>{
   roomMotion=!roomMotion;$('room-motion').textContent=roomMotion?'Pause motion':'Resume motion';
   $('room-motion').setAttribute('aria-pressed',String(!roomMotion));

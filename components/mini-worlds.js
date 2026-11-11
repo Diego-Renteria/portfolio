@@ -1,3 +1,4 @@
+import {GLOBE_RADIUS,GLOBE_ORIGIN_Z} from './globe-curve.js?v=gallery-1';
 export const WORLDS=[
   ['original','Autumn island'],
   ['planet','Pocket planet'],
@@ -18,8 +19,8 @@ export function createMiniWorlds(T,terrain,world){
   const center=points.reduce((a,p)=>a.add(p),new T.Vector2()).multiplyScalar(1/points.length);
   let current;
   function globe(){
-    const radius=205,cut=89,angle=Math.acos(cut/radius);
-    const geometry=new T.SphereGeometry(radius,100,68,0,Math.PI*2,angle,Math.PI-angle);
+    const radius=GLOBE_RADIUS;
+    const geometry=new T.SphereGeometry(radius-.75,120,88);
     const p=geometry.attributes.position,c=new T.Color(),colors=[];
     for(let i=0;i<p.count;i++){
       const x=p.getX(i),y=p.getY(i),z=p.getZ(i);
@@ -31,16 +32,7 @@ export function createMiniWorlds(T,terrain,world){
     geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));
     const shell=new T.Group();
     const material=new T.MeshStandardMaterial({vertexColors:true,roughness:.82,side:T.DoubleSide,emissive:'#416e83',emissiveIntensity:.25});
-    const ball=new T.Mesh(geometry,material);ball.position.set(center.x,-cut,center.y);shell.add(ball);
-    const rim=[],faces=[],n=points.length,r=Math.sin(angle)*radius;
-    for(const [i,pt] of points.entries()){
-      const a=Math.atan2(pt.y-center.y,pt.x-center.x);
-      rim.push(pt.x,.08,pt.y,center.x+Math.cos(a)*r,0,center.y+Math.sin(a)*r);
-      const j=(i+1)%n;
-      faces.push(i*2,i*2+1,j*2,j*2,i*2+1,j*2+1);
-    }
-    const shore=new T.BufferGeometry();shore.setAttribute('position',new T.Float32BufferAttribute(rim,3));shore.setIndex(faces);shore.computeVertexNormals();
-    shell.add(new T.Mesh(shore,new T.MeshStandardMaterial({color:'#446773',roughness:.58,side:T.DoubleSide})));
+    const ball=new T.Mesh(geometry,material);ball.userData.unwarpedGlobe=true;ball.position.set(0,-radius,GLOBE_ORIGIN_Z);shell.add(ball);
     return shell;
   }
   function select(id){

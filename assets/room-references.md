@@ -7,3 +7,5 @@
 - [MIT MAD Making](https://mad.mit.edu/about/mad-making) informed the workshop’s task lighting, benches, and organized tool storage.
 - [Apple’s visionOS materials guidance](https://developer.apple.com/design/human-interface-guidelines/materials) informed the translucent, object-anchored panels.
 - The rooms reuse [scanned furniture](curated/CREDITS.md), [surface scans](materials/CREDITS.md), and the portfolio’s existing album artwork. Prototype models were authored from Diego’s [project photos](projects/CREDITS.md). The TV and music use YouTube and Spotify’s official players.
+
+- The expanded rooms use 12 additional [Poly Haven models](https://polyhaven.com/models), including the sofa, dining table, cassette player, bench vise, and articulated work lamp. The [model manifest](curated/room-models.json) lists their original sources and CC0 licenses. The apartment posters are original graphics inspired by music, soccer, and the Pacific Northwest.
