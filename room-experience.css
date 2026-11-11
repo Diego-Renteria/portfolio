@@ -149,3 +149,11 @@ body:is([data-room="about"],[data-room="maker"]) .room-grid { grid-template-colu
   .room-paper{margin-top:27px}
 }
 @media(prefers-reduced-motion:reduce){.room-page *{scroll-behavior:auto!important}}
+body[data-reference-remodel] .room-intro{padding:19px 0 16px}
+body[data-reference-remodel] .room-intro h1{font-size:clamp(29px,4vw,51px);margin:4px 0 7px}
+body[data-reference-remodel] .room-options{justify-content:flex-end}
+body[data-reference-remodel] .room-stage{height:clamp(455px,calc(100svh - 226px),850px)}
+@media(max-width:560px){
+  body[data-reference-remodel] .room-stage{height:clamp(390px,calc(100svh - 245px),640px)}
+  body[data-reference-remodel] .room-options{justify-content:flex-start}
+}

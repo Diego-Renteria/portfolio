@@ -32,7 +32,7 @@ export function samplePassingPose(pose,distance,pass,routeLength){
 }
 
 export function createTrafficActivity({cars,routes,random,sampleBase,hasRoom,isVisible=()=>true,quickStart=false}){
-  let chase=null,nextChase=quickStart?1.5:8+random()*8,nextDecision=.55,nextPass=5;
+  let chase=null,nextChase=quickStart?1.5:8+random()*8,nextDecision=.55,nextPass=5,localRequested=false;
   const stats={chases:0,finished:0,passes:0,wrongWayRuns:0,reroutes:0};
   let cursor=0;
   const nextStop=(car,s=car.s,route=car.route)=>
@@ -60,6 +60,27 @@ export function createTrafficActivity({cars,routes,random,sampleBase,hasRoom,isV
 
   function startChase(elapsed){
     let selected=null,best=-Infinity;
+    if(localRequested){
+      const suspect=cars.find(car=>car.active&&sportModel(car.model)&&!car.lock&&!car.pass);
+      const officer=cars.find(car=>car.active&&policeModel(car.model)&&!car.lock&&!car.pass);
+      if(!suspect||!officer)return;
+      const clear=pose=>cars.every(car=>!car.active||car===suspect||car===officer||Math.hypot(car.p.x-pose.x,car.p.z-pose.z)>4.5);
+      for(const route of routes){
+        if((officer.requireStadiumClear||suspect.requireStadiumClear)&&!route.stadiumClear)continue;
+        for(let s=0;s<route.length;s+=1.5){
+          const pose=route.sample(s),officerS=loopDistance(10,s,route.length),tail=route.sample(officerS);
+          if(Math.abs(pose.z-22)>3.8||Math.abs(tail.z-22)>3.8||Math.abs(pose.x)>19||Math.abs(tail.x)>21||
+            pose.curvature||tail.curvature||Math.abs(pose.dx)<.85||Math.abs(tail.dx)<.85||!clear(pose)||!clear(tail))continue;
+          const score=16-Math.abs(pose.x)*.23-Math.abs(tail.x)*.18+random()*.6;
+          if(score>best){best=score;selected={suspect,officer,officerS,s,route};}
+        }
+      }
+      if(!selected)return;
+      Object.assign(suspect,{route:selected.route,s:selected.s,turnRoute:null,speed:2.8,p:sampleBase({...suspect,route:selected.route,turnRoute:null},selected.s)});
+      Object.assign(officer,{route:selected.route,s:selected.officerS,turnRoute:null,speed:2.9,p:sampleBase({...officer,route:selected.route,turnRoute:null},selected.officerS)});
+      localRequested=false;
+    }
+    if(!selected)
     for(const suspect of cars){
       if(!suspect.active||!sportModel(suspect.model)||suspect.pass)continue;
       for(const officer of cars){
@@ -181,5 +202,5 @@ export function createTrafficActivity({cars,routes,random,sampleBase,hasRoom,isV
     return car.pass?.leader?1.44:car.pass?1.12:1;
   }
 
-  return {update,pace,stats,requestPursuit(){nextChase=0;},get chase(){return chase;}};
+  return {update,pace,stats,requestPursuit(){if(chase)finishChase(nextDecision);localRequested=true;nextChase=0;},get chase(){return chase;}};
 }

@@ -1,12 +1,12 @@
-import {WORLDS,createMiniWorlds} from './components/mini-worlds.js?v=inside-1';
-import {mountInsideBlock} from './components/inside-block.js?v=inside-1';
+import {WORLDS,createMiniWorlds} from './components/mini-worlds.js?v=loft-1';
+import {mountInsideBlock} from './components/inside-block.js?v=loft-1';
 import {renderMakerCard} from './components/engineering-work.js?v=rooms-1';
 import {createFrameResize,cameraRainDensity} from './components/frame-resize.js?v=b477ce33502c';
 import { THREE as T, createContext } from './components/context.js?v=b477ce33502c';
 import { buildTerrain } from './components/terrain.js?v=b477ce33502c';
 import { buildSkyline } from './components/skyline.js?v=b477ce33502c';
 import { buildStreets } from './components/streets.js?v=b477ce33502c';
-import { buildTraffic } from './components/traffic.js?v=inside-1';
+import { buildTraffic } from './components/traffic.js?v=loft-1';
 import { buildGreenery } from './components/greenery.js?v=b477ce33502c';
 import { buildPark } from './components/park.js?v=b477ce33502c';
 import { createRenderBudget } from './components/render-budget.js?v=b477ce33502c';
@@ -101,7 +101,8 @@ try{
       return Math.abs(trafficPoint.x)<.94&&Math.abs(trafficPoint.y)<.94&&trafficPoint.z>-1&&trafficPoint.z<1;
     },
   }}),urban=buildUrbanDetails(ctx);systems.push(traffic,urban);const portfolio=buildPortfolio(ctx);systems.push(portfolio);
-  const chaseButton=document.createElement('button');chaseButton.type='button';chaseButton.className='city-chase';chaseButton.textContent='Trigger a pursuit';chaseButton.hidden=matchMedia('(prefers-reduced-motion: reduce)').matches;chaseButton.onclick=()=>traffic.activity.requestPursuit();document.querySelector('.bottom').prepend(chaseButton);
+  const chaseButton=document.createElement('button');chaseButton.type='button';chaseButton.className='city-chase';chaseButton.textContent='Trigger a pursuit';chaseButton.hidden=matchMedia('(prefers-reduced-motion: reduce)').matches;chaseButton.onclick=()=>{viewBlock();traffic.activity.requestPursuit();chaseButton.textContent='Waiting for a clear lane…';};document.querySelector('.bottom').prepend(chaseButton);
+  const patrolWash=new T.PointLight('#478cff',0,12,1.8);world.add(patrolWash);
   renderer.domElement.dataset.vehicleModels=String(new Set(traffic.cars.map(car=>car.model)).size);
   const rainAtmosphere=buildRainAtmosphere(ctx);systems.push(rainAtmosphere);
   const lighting=buildCityLighting(ctx,streets.lampSites);systems.push(lighting);
@@ -144,7 +145,7 @@ try{
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,target=new T.Vector3(0,-2,11),wantedTarget=target.clone(),eye=new T.Vector3(285,205,355),wantedEye=eye.clone();let viewShift=.10,wantedShift=.10,viewLift=0,wantedLift=0,wantedFov=34,wantedNear=5;
   const apartmentTV=mountApartmentTV({THREE:T,host,renderer,screen:portfolio.interiors[0].cinemaScreen,reduced,highlight:portfolio.highlights.about.uniform});
   const anchors=portfolio.anchors;const anchor=id=>anchors[id==='experience'?'about':id];
-  navigate=(view,id)=>{const mobile=host.clientWidth<700;wantedFov=34;wantedNear=view==='overview'?(mobile?15:5):.5;camera.far=2000;if(view==='inside'){const shot=insideBlock.shot(id);if(shot){wantedEye.fromArray(shot[1]);wantedTarget.fromArray(shot[2]);wantedNear=.06;wantedFov=mobile?70:58;wantedShift=0;wantedLift=0;return;}}wantedLift=mobile&&view==='place'?.19:0;if(view==='overview'){wantedTarget.set(0,worldSelect.value==='planet'?-27:worldSelect.value==='original'?-2:-15,11);wantedEye.set(mobile?790:285,mobile?570:205,mobile?1000:355);wantedShift=mobile?0:.10;}else if(view==='block'){wantedTarget.set(0,10.4,12);wantedEye.set(1.5,14,49);wantedFov=T.MathUtils.radToDeg(2*Math.atan(31/(wantedEye.distanceTo(wantedTarget)*camera.aspect)));wantedShift=0;}else{const place=portfolio.viewTargets[id==='experience'?'about':id],center=place.center,nominalDistance=Math.max(21,place.height*1.9)*(mobile?1.6:1),distance=Math.min(27,nominalDistance);wantedFov=T.MathUtils.radToDeg(2*Math.atan(Math.tan(T.MathUtils.degToRad(17))*nominalDistance/distance));wantedTarget.copy(center);wantedTarget.z=16;wantedEye.set(center.x+distance*.10,center.y+distance*.10,17+distance);wantedShift=lightingPreview?0:mobile?0:-.15;}};
+  navigate=(view,id)=>{const mobile=host.clientWidth<700;wantedFov=34;wantedNear=view==='overview'?(mobile?15:5):.5;camera.far=2000;if(view==='inside'){const shot=insideBlock.shot(id);if(shot){wantedEye.fromArray(shot[1]);wantedTarget.fromArray(shot[2]);wantedNear=.06;wantedFov=mobile?70:58;wantedShift=0;wantedLift=0;return;}}wantedLift=mobile&&view==='place'?.19:0;if(view==='overview'){const globe=worldSelect.value==='globe';wantedTarget.set(0,globe?-104:worldSelect.value==='planet'?-27:worldSelect.value==='original'?-2:-15,11);wantedEye.set(mobile?790:globe?455:285,mobile?570:globe?292:205,mobile?1000:globe?565:355);wantedShift=mobile?0:.10;}else if(view==='block'){wantedTarget.set(0,10.4,12);wantedEye.set(1.5,14,49);wantedFov=T.MathUtils.radToDeg(2*Math.atan(31/(wantedEye.distanceTo(wantedTarget)*camera.aspect)));wantedShift=0;}else{const place=portfolio.viewTargets[id==='experience'?'about':id],center=place.center,nominalDistance=Math.max(21,place.height*1.9)*(mobile?1.6:1),distance=Math.min(27,nominalDistance);wantedFov=T.MathUtils.radToDeg(2*Math.atan(Math.tan(T.MathUtils.degToRad(17))*nominalDistance/distance));wantedTarget.copy(center);wantedTarget.z=16;wantedEye.set(center.x+distance*.10,center.y+distance*.10,17+distance);wantedShift=lightingPreview?0:mobile?0:-.15;}};
   const hoverTarget=new T.Vector3(),hoverValue=new T.Vector3();
   let orbit=0,drag=null,dragged=false;
   renderer.domElement.addEventListener('pointerdown',event=>{
@@ -193,7 +194,11 @@ try{
     const leader=document.querySelector('#block-leader');leader.style.visibility=currentView==='overview'?'visible':'hidden';projected.set(-8.3,8,17).applyMatrix4(world.matrixWorld).project(camera);const line=leader.querySelector('line'),tip=leader.querySelector('circle');line.setAttribute('x1',parseFloat(blockLabel.style.left));line.setAttribute('y1',parseFloat(blockLabel.style.top));line.setAttribute('x2',(projected.x*.5+.5)*host.clientWidth);line.setAttribute('y2',(-projected.y*.5+.5)*host.clientHeight);tip.setAttribute('cx',line.getAttribute('x2'));tip.setAttribute('cy',line.getAttribute('y2'));
     const emphasis=hovered==='block';blockHalo.material.opacity+=((emphasis?.065:0)-blockHalo.material.opacity)*(reduced?1:1-Math.exp(-dt*8));
     portfolio.setHighlight?.(emphasis?'block':hovered);
-    for(const s of systems)s?.update?.(reduced?0:dt,elapsed);if(citySky)citySky.render(elapsed,camera.aspect,reduced);else selectBackdrop.update(reduced?0:dt,camera.aspect);apartmentTV.update(camera,currentView==='inside'?'place':currentView,currentPlace);renderer.render(scene,camera);if(Math.floor(elapsed)%3===0){renderer.domElement.dataset.frameMs=renderBudget.averageMs.toFixed(2);renderer.domElement.dataset.drawCalls=renderer.info.render.calls;renderer.domElement.dataset.triangles=renderer.info.render.triangles;renderer.domElement.dataset.camera=eye.toArray().map(v=>v.toFixed(2)).join(',');}
+    for(const s of systems)s?.update?.(reduced?0:dt,elapsed);
+    const officer=traffic.activity.chase?.officer;
+    if(officer){const beat=Math.floor(elapsed*12)%8;patrolWash.position.set(officer.p.x,1.45,officer.p.z);patrolWash.color.set(beat<4?'#ff253c':'#2877ff');patrolWash.intensity=beat%4===3?4:42;if(chaseButton.textContent!=='Trigger a pursuit')chaseButton.textContent='Trigger a pursuit';}
+    else patrolWash.intensity=0;
+    if(citySky)citySky.render(elapsed,camera.aspect,reduced);else selectBackdrop.update(reduced?0:dt,camera.aspect);apartmentTV.update(camera,currentView==='inside'?'place':currentView,currentPlace);renderer.render(scene,camera);if(Math.floor(elapsed)%3===0){renderer.domElement.dataset.frameMs=renderBudget.averageMs.toFixed(2);renderer.domElement.dataset.drawCalls=renderer.info.render.calls;renderer.domElement.dataset.triangles=renderer.info.render.triangles;renderer.domElement.dataset.camera=eye.toArray().map(v=>v.toFixed(2)).join(',');}
     renderer.domElement.dataset.pursuit=traffic.activity.chase?'active':'quiet';
   }requestAnimationFrame(frame);
   document.body.dataset.cityEdition='original';renderer.domElement.dataset.cityEdition='original';

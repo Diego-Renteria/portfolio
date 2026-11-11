@@ -135,7 +135,7 @@ function roomKit(world,room,seed,kind){
   const wood=material(P.wood,{normalMap:scan('wood_floor_deck_nor_gl',[2,2])});
   const floor=kind==='maker'&&[0,1,4,5,8].includes(seed)
     ?material(P.floor,{map:scan('plastered_wall_04_diff',[4,4],true),normalMap:scan('plastered_wall_04_nor_gl',[4,4]),roughness:.81,normalScale:new T.Vector2(.36,.36)})
-    :material(P.floor,{map:scan('wood_floor_deck_diff',[4,4],true),normalMap:scan('wood_floor_deck_nor_gl',[4,4]),roughnessMap:scan('wood_floor_deck_rough',[4,4]),roughness:.85,normalScale:new T.Vector2(.55,.55)});
+    :material(P.floor,{map:scan('wood_floor_deck_diff',[4,4],true),normalMap:scan('wood_floor_deck_nor_gl',[4,4]),roughnessMap:P.camera?null:scan('wood_floor_deck_rough',[4,4]),roughness:P.camera?.94:.85,normalScale:new T.Vector2(.55,.55)});
   const wall=material(P.wall,{normalMap:scan('plastered_wall_04_nor_gl',[3,2])});
   const trim=material('#303238',{roughness:.53,metalness:.26});
   const cream=material('#d9cdb9'),brass=material('#a18662',{metalness:.54,roughness:.39});
@@ -258,7 +258,7 @@ function apartment(world,k,entries,screen,register,seed){
   soft(couch,.47,.065,.75,throwMat,-1.12,.65,-.10);
   for(let n=0;n<14;n++)box(couch,.017,.105,.014,throwMat,-1.34+n*.034,.57,-.48);
   const mid=(z+sofaZ)*.5;
-  soft(world,5.72,.028,3.85,rug,x+.10,.028,mid);
+  if(!P.camera)soft(world,5.72,.028,3.85,rug,x+.10,.028,mid);
   const coffee=group(world,x+.24,0,mid+.24,.08);
   if([1,2,4,8].includes(seed)){
     cyl(coffee,.62,.080,wood,0,.39,0);cyl(coffee,.18,.34,trim,0,.18,0);
@@ -717,9 +717,119 @@ function workshop(world,k,entries,register,seed,edition=0){
   }
 }
 
-export function buildRoom(kind,preset,{screen,musicPage=0,edition=0}={}){
+const referencePlans={
+  about:{width:13.2,depth:12.4,height:5.55,wall:'#ae7f67',wood:'#745744',floor:'#b8a48d',fabric:'#d3c4ac',rug:'#745049',accent:'#ffaf69',fill:'#849bc1',light:'#ffdaad',camera:[4.9,3.05,5.7],aim:[-1,1.85,-2.75]},
+  library:{width:15.2,depth:12.6,height:6.7,wall:'#a29c84',wood:'#94704f',floor:'#baa38a',fabric:'#738170',rug:'#68534c',accent:'#ffd08a',fill:'#a1aec0',light:'#ffe1b3',camera:[4.2,2.67,5.9],aim:[-1.3,2.62,-3.5]},
+  music:{width:9.5,depth:15.4,height:5.05,wall:'#a6755b',wood:'#a87952',floor:'#bf9d7a',fabric:'#9e8e69',rug:'#8c5047',accent:'#ffc481',fill:'#819aa9',light:'#ffe0ae',camera:[-.55,2.18,7.4],aim:[-.25,2.08,-4.4]},
+  maker:{width:13.6,depth:15.2,height:6.15,wall:'#aeb5ac',wood:'#a48866',floor:'#a8adae',fabric:'#777d79',rug:'#416258',accent:'#f6d8a5',fill:'#99b6cf',light:'#fff3db',camera:[1.25,2.65,7.2],aim:[.1,2.15,-4.1]},
+};
+function hangingGlobe(g,k,x,y,z,r){
+  beam(g,[x,k.H,z],[x,y,z],.014,k.trim);
+  ball(g,r,r,r,lightMat('#ffe0ad',.65),x,y,z);
+  const glow=new T.PointLight('#ffcf95',13,6,1.7);glow.position.set(x,y-.18,z);g.add(glow);
+}
+function runner(g,k,x,z,w,d){
+  const map=artTexture(256,512,(ctx,width,height)=>{
+    ctx.fillStyle='#723d33';ctx.fillRect(0,0,width,height);
+    for(let i=0;i<9;i++){ctx.strokeStyle=['#a97754','#594436','#c2a685'][i%3];ctx.lineWidth=3;ctx.strokeRect(5+i*3,5+i*3,width-10-i*6,height-10-i*6);}
+    for(let y=42;y<height-30;y+=27)for(let x=34;x<width-24;x+=26){
+      ctx.fillStyle=(x+y)%3?'#ac886d':'#594136';ctx.beginPath();ctx.moveTo(x-9,y);ctx.lineTo(x,y-9);ctx.lineTo(x+9,y);ctx.lineTo(x,y+9);ctx.fill();
+    }
+  });
+  const surface=imagePlane(g,w,d,map,x,.028,z);surface.rotation.x=-Math.PI/2;
+}
+function referenceShell(world,k,kind){
+  const {P,H,back,left,right,trim,wood}=k;
+  const masonry=material('#aa806f',{map:scan('red_brick_03_diff',[3,2],true),normalMap:scan('red_brick_03_nor_gl',[3,2]),normalScale:new T.Vector2(.72,.72)});
+  const ceiling=material(kind==='music'?'#a58970':'#a8a39a',{normalMap:scan('plastered_wall_04_nor_gl',[3,3])});
+  box(world,P.width,.14,P.depth,ceiling,0,H,0);
+  if(kind==='about'||kind==='music'){
+    const side=kind==='music'?left+.14:right-.14;
+    box(world,.07,H,5.2,masonry,side,H/2,1.95);
+    for(const x of [left+.65,right-.65])box(world,.62,H,.29,masonry,x,H/2,back+.27);
+  }
+  const count=kind==='maker'?9:kind==='music'?5:4;
+  for(let i=0;i<count;i++){
+    const z=back+.4+i*(P.depth-.9)/count;
+    box(world,P.width-.2,kind==='maker'?.27:.16,.21,kind==='maker'?trim:wood,0,H-.16,z);
+    if(kind==='maker'&&i%2===0){
+      const white=lightMat('#e5efff',.92);
+      for(const x of [-3.5,3.5])box(world,4.6,.035,.12,white,x,H-.35,z);
+    }
+  }
+  const wallSide=kind==='maker'?1:-1,wallX=wallSide*(right-.14),angle=-wallSide*Math.PI/2;
+  const windows=group(world,wallX,0,-2.1,angle);
+  for(const [i,x] of (kind==='music'?[-2.3,.3]:[-2.6,0,2.6]).entries()){
+    const view=skyline({...P,plan:kind==='maker'?'sunlit':'loft'},kind.length+13+i*17);
+    imagePlane(windows,2.12,kind==='about'?3.82:3.25,view,x,2.58,.02,0,true);
+    for(const dx of [-1.10,0,1.10])box(windows,.073,kind==='about'?3.98:3.41,.14,trim,x+dx,2.58,.09);
+    for(const y of kind==='about'?[.65,1.92,3.22,4.5]:[.94,2.59,4.24])box(windows,2.24,.082,.14,trim,x,y,.09);
+    box(windows,2.35,.12,.31,wood,x,kind==='about'?.60:.89,.13);
+  }
+}
+function referenceFurnishings(world,k,kind,seed){
+  const {P,H,back,left,right,wood,trim,cream,brass}=k;
+  if(kind==='about'){
+    runner(world,k,-1.5,-.36,5.5,4.7);
+    for(const [x,z,r] of [[-4.9,-3.15,1.38],[3.4,-2.9,1.48],[-4.9,.8,1.17],[3.85,3.5,1.30]])planter(world,x,z,r);
+    hangingGlobe(world,k,-2.7,3.27,-2.7,.47);hangingGlobe(world,k,1.6,3.64,.25,.58);
+    table(world,k,4.15,.89,1.42,2.6,1.1);
+    furnish(world,'mid_century_lounge_chair',.86,3.7,0,2.9,-2.68);
+    for(const z of [1.12,1.59,1.86])cyl(world,.11,.13,cream,4.6,.99,z);
+    const media=table(world,k,3.7,.61,back+1.05,2.1,.65);
+    for(let i=0;i<9;i++)box(media,.067,.26,.22,material(paperColors[i%paperColors.length]),-.74+i*.095,.79,0);
+    lamp(world,k,2.9,back+1.25,1.69,'#ffc475',true);
+  }
+  if(kind==='library'){
+    const wall=group(world,left+.20,0,2.3,Math.PI/2),height=H-.53;
+    for(const x of [-2.75,-1.37,0,1.37,2.75])box(wall,.09,height,.56,trim,x,height/2,0);
+    for(let i=0;i<11;i++){
+      const y=.21+i*.53;
+      box(wall,5.5,.066,.52,wood,0,y,0);
+      fillerSpines(wall,k,-2.68,y+.06,.11,32,54+i,5.34);
+    }
+    const study=table(world,k,2.75,.77,1.55,3.3,1.2,.07);
+    for(const x of [-.97,.92])for(const z of [-.95,.95])furnish(study,'mid_century_lounge_chair',.64,x,0,z,z>0?Math.PI:0);
+    for(const [i,x] of [-.93,.05,1.12].entries())soft(study,.31,.055,.23,material(paperColors[i]),x,.84,.13,.15*i);
+    hangingGlobe(world,k,2.02,3.2,.9,.68);hangingGlobe(world,k,3.43,3.55,1.9,.79);
+    planter(world,right-.95,back+2.4,1.33);
+    runner(world,k,2.73,1.47,4.5,3.0);
+  }
+  if(kind==='music'){
+    runner(world,k,0,1.5,1.7,6.1);
+    for(const [i,z] of [-3.9,-.6,2.7].entries())hangingGlobe(world,k,i%2?.7:-.65,H-1.25-(i%2)*.32,z,.51);
+    for(const [side,z] of [[-1,3.0],[1,3.75],[1,.55]]){
+      const bin=table(world,k,side*2.67,.81,z,1.26,1.65);
+      for(const x of [-.57,.57])box(bin,.073,.29,1.64,wood,x,1.0,0);
+      for(const e of [-.79,.79])box(bin,1.2,.29,.08,wood,0,1.0,e);
+      for(let j=0;j<32;j++)box(bin,1.03,.39,.025,material(paperColors[(j+side+8)%7]),0,1.09,-.73+j*.046);
+    }
+    planter(world,left+.83,back+2.35,1.4);
+  }
+  if(kind==='maker'){
+    for(const side of [-1,1]){
+      for(const z of [-4.65,-1.8,1.0,3.7]){
+        const x=side*(right-1.05);
+        const bench=table(world,k,x,.94,z,1.36,2.38);
+        soft(bench,1.02,.69,.70,trim,0,.43,.54);
+        for(let i=0;i<4;i++)box(bench,.66,.037,.024,brass,0,.23+i*.13,.908);
+        for(let i=0;i<3;i++)soft(bench,.22,.12,.36,material(paperColors[(i+seed)%7]),-.33+i*.30,1.03,-.63);
+        if(side<0)furnish(world,'steel_frame_shelves_03',1.6,x-.30,1.75,z,Math.PI/2);
+      }
+    }
+    const utility=material('#8f9292',{roughness:.62,metalness:.32});
+    beam(world,[right-1.02,H-.71,back+.3],[right-1.02,H-.71,5.9],.32,utility);
+    for(const z of [-4.7,-1.6,1.5,4.6])beam(world,[right-1.02,H-.18,z],[right-1.02,H-.68,z],.038,trim);
+    const safety=lightMat('#e2b958',.13);
+    for(const x of [-2.2,2.2])box(world,.035,.004,10,safety,x,.014,0);
+    for(const [x,z] of [[-3,-2],[3,2]]){const task=new T.PointLight('#d9e7ff',25,8,1.7);task.position.set(x,4.8,z);world.add(task);}
+  }
+}
+
+export function buildRoom(kind,preset,{screen,musicPage=0,edition=0,reference=false}={}){
   const world=new T.Group();
-  const profile=preset===0?{...ARCHITECTURE[0],...defaultFinishes[kind]}:ARCHITECTURE[preset];
+  const useReference=reference&&preset===0;
+  const profile=useReference?{...ARCHITECTURE[0],...referencePlans[kind],plan:kind==='about'||kind==='music'?'loft':kind==='library'?'archive':'minimal'}:preset===0?{...ARCHITECTURE[0],...defaultFinishes[kind]}:ARCHITECTURE[preset];
   const k=roomKit(world,profile,preset,kind),targets=new Map();
   const entries=entriesFor(kind);
   function register(entry,object,anchor,flags={}){
@@ -728,11 +838,12 @@ export function buildRoom(kind,preset,{screen,musicPage=0,edition=0}={}){
   }
   let record;
   if(kind==='about')apartment(world,k,entries,screen,register,preset);
-  if(kind==='library')library(world,k,entries,register,preset,edition);
-  if(kind==='music')({record}=recordShop(world,k,entries,register,preset,musicPage,edition));
-  if(kind==='maker')workshop(world,k,entries,register,preset,edition);
+  if(kind==='library')library(world,k,entries,register,preset,useReference?2:edition);
+  if(kind==='music')({record}=recordShop(world,k,entries,register,preset,musicPage,useReference?2:edition));
+  if(kind==='maker')workshop(world,k,entries,register,preset,useReference?2:edition);
+  if(useReference){referenceShell(world,k,kind);referenceFurnishings(world,k,kind,preset);}
   world.updateMatrixWorld(true);
-  return {world,targets,record,profile,camera:views[preset]};
+  return {world,targets,record,profile,camera:useReference?profile.camera:views[preset],aim:useReference?profile.aim:null};
 }
 
 export function disposeRoom(room,screen){

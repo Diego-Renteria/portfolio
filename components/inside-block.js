@@ -35,6 +35,9 @@ export function mountInsideBlock({enter,leave}){
         button.onclick=()=>{if(item.kind==='tv'){pickShot(1);setOpen(false);}else show(item);};
         list.append(button);
       }
+      const remodel=document.createElement('a');
+      remodel.href=({maker:'makerspace',library:'library',music:'music',about:'about'})[room.kind]+'.html';
+      remodel.textContent='Open the room remodel ↗';list.prepend(remodel);
       if(room.kind!=='about'){
         const comparison=document.createElement('a');
         comparison.href=({maker:'makerspace',library:'library',music:'music'})[room.kind]+'.html?pass=0';

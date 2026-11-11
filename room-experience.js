@@ -2,7 +2,7 @@ import * as T from './three.module.js?v=b477ce33502c';
 import {applyPageAtmosphere} from './components/page-atmosphere.js?v=b477ce33502c';
 import {mountApartmentTV} from './components/apartment-tv.js?v=b477ce33502c';
 import {ROOMS,UI_STYLES,TRACK_ID,entriesFor,turntableEntry} from './components/room-catalog.js?v=rooms-1';
-import {buildRoom,disposeRoom,createTVScreen} from './components/room-scene.js?v=inside-1';
+import {buildRoom,disposeRoom,createTVScreen} from './components/room-scene.js?v=loft-1';
 
 const kind=document.body.dataset.room,info=ROOMS[kind],entries=entriesFor(kind);
 const root=document.querySelector('#room-content'),$=id=>document.getElementById(id);
@@ -12,7 +12,7 @@ const arrow='<span aria-hidden="true">↗</span>';
 const query=new URLSearchParams(location.search),requested=Number(query.get('room'));
 let preset=Number.isInteger(requested)&&requested>=1&&requested<=10?requested-1:0;
 let style=UI_STYLES.some(([id])=>id===query.get('glass'))?query.get('glass'):'pearl';
-let edition=kind==='about'?0:Number(query.get('pass'))||0;
+let edition=query.has('pass')?Math.max(0,Math.min(2,Number(query.get('pass'))||0)):-1;
 let shelf=0,active=null,room,renderer,screen,player,tv,returnFocus;
 let stageVisible=true;
 let catalog=new Map(),collectionOffset=0,roomMotion=!reduced,width=1,height=1;
@@ -32,7 +32,7 @@ root.innerHTML=`
     <div class="room-intro">
       <div><p class="room-eyebrow">${info.name}</p><h1>${info.heading}</h1><p class="room-lead">${info.intro}</p></div>
       <div class="room-options">
-        ${kind!=='about'?'<label>Review pass <select id="room-pass"><option value="0">Original</option><option value="1">First pass</option><option value="2">Refined</option></select></label>':''}
+        ${kind!=='about'?'<label>Review pass <select id="room-pass"><option value="-1">Reference remodel</option><option value="0">Original</option><option value="1">First pass</option><option value="2">Refined</option></select></label>':''}
         <label>Room design <select id="room-design">${info.presets.map((name,i)=>`<option value="${i}">${String(i+1).padStart(2,'0')} · ${name}</option>`).join('')}</select></label>
         <label>Glass style <select id="glass-style">${UI_STYLES.map(([id,name],i)=>`<option value="${id}">${String(i+1).padStart(2,'0')} · ${name}</option>`).join('')}</select></label>
       </div>
@@ -139,7 +139,8 @@ function setStyle(value,preview=false){
 function layoutRoom(){
   const previous=room;
   if(previous){if(screen)screen.removeFromParent();scene.remove(previous.world);disposeRoom(previous,screen);}
-  room=buildRoom(kind,preset,{screen,musicPage:shelf,edition});
+  room=buildRoom(kind,preset,{screen,musicPage:shelf,edition,reference:edition===-1});
+  document.body.toggleAttribute('data-reference-remodel',Boolean(room.aim));
   scene.add(room.world);
   pins.replaceChildren();pinRecords.length=0;
   for(const target of room.targets.values()){
@@ -158,10 +159,10 @@ function updateShot(){
   if(!room)return;
   const subject=active&&room.targets.get(active.id);
   const narrow=width/height<1.05;
-  camera.fov=narrow?47:36;
+  camera.fov=room.aim&&!subject?(narrow?64:52):narrow?47:36;
   if(!subject){
     wantedEye.fromArray(room.camera);
-    wantedAim.set(0,1.53,-.97);
+    if(room.aim)wantedAim.fromArray(room.aim);else wantedAim.set(0,1.53,-.97);
     if(narrow)wantedEye.z+=2.40;
   }else if(subject.screen){
     screen.updateWorldMatrix(true,false);
@@ -243,7 +244,7 @@ $('shelf-next')?.addEventListener('click',()=>switchCrate(1));
 $('open-deck')?.addEventListener('click',event=>show(turntableEntry(),true,event.currentTarget));
 if($('room-pass')){
   $('room-pass').value=String(edition);
-  $('room-pass').onchange=()=>{edition=Number($('room-pass').value);if(renderer)layoutRoom();const url=new URL(location.href);url.searchParams.set('pass',edition);history.replaceState(null,'',url);};
+  $('room-pass').onchange=()=>{edition=Number($('room-pass').value);if(renderer)layoutRoom();const url=new URL(location.href);if(edition===-1)url.searchParams.delete('pass');else url.searchParams.set('pass',edition);history.replaceState(null,'',url);};
 }
 setStyle(style);buildCollection();
 
